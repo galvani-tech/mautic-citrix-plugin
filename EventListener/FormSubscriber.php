@@ -4,7 +4,6 @@ namespace MauticPlugin\MauticCitrixBundle\EventListener;
 
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\EntityManager;
-use Mautic\CoreBundle\Helper\TemplatingHelper;
 use Mautic\FormBundle\Entity\Action;
 use Mautic\FormBundle\Entity\Field;
 use Mautic\FormBundle\Entity\Form;
@@ -27,59 +26,23 @@ use MauticPlugin\MauticCitrixBundle\Model\CitrixModel;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Process\Exception\InvalidArgumentException;
-use Symfony\Component\Translation\TranslatorInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
+use Twig\Environment;
+
 
 class FormSubscriber implements EventSubscriberInterface
 {
     use CitrixRegistrationTrait;
     use CitrixStartTrait;
 
-    /**
-     * @var FormModel
-     */
-    private $formModel;
-
-    /**
-     * @var SubmissionModel
-     */
-    private $submissionModel;
-
-    /**
-     * @var CitrixModel
-     */
-    private $citrixModel;
-
-    /**
-     * @var TranslatorInterface
-     */
-    private $translator;
-
-    /**
-     * @var EntityManager
-     */
-    private $entityManager;
-
-    /**
-     * ヽ(ಠ_ಠ)ノ Used in the CitrixStartTrait.
-     *
-     * @var TemplatingHelper
-     */
-    private $templating;
-
     public function __construct(
-        CitrixModel $citrixModel,
-        FormModel $formModel,
-        SubmissionModel $submissionModel,
-        TranslatorInterface $translator,
-        EntityManager $entityManager,
-        TemplatingHelper $templating
+        private CitrixModel $citrixModel,
+        private FormModel $formModel,
+        private SubmissionModel $submissionModel,
+        private TranslatorInterface $translator,
+        private EntityManager $entityManager,
+        private Environment $templating
     ) {
-        $this->citrixModel     = $citrixModel;
-        $this->formModel       = $formModel;
-        $this->submissionModel = $submissionModel;
-        $this->translator      = $translator;
-        $this->entityManager   = $entityManager;
-        $this->templating      = $templating;
     }
 
     public static function getSubscribedEvents()
