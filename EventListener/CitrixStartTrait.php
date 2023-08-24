@@ -1,13 +1,6 @@
 <?php
 
-/*
- * @copyright   2016 Mautic Contributors. All rights reserved
- * @author      Mautic, Inc.
- *
- * @link        https://mautic.org
- *
- * @license     GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
- */
+declare(strict_types=1);
 
 namespace MauticPlugin\MauticCitrixBundle\EventListener;
 
@@ -32,8 +25,6 @@ trait CitrixStartTrait
     /**
      * @param string $product
      * @param Lead   $lead
-     * @param  $emailId
-     * @param  $actionId
      *
      * @throws \Symfony\Component\HttpKernel\Exception\BadRequestHttpException
      * @throws \Symfony\Component\DependencyInjection\Exception\ServiceCircularReferenceException
@@ -46,7 +37,7 @@ trait CitrixStartTrait
     public function startProduct($product, $lead, array $productsToStart, $emailId = null, $actionId = null)
     {
         $leadFields                         = $lead->getProfileFields();
-        [$email, $firstname, $lastname] = [
+        [$email, $firstname, $lastname]     = [
             array_key_exists('email', $leadFields) ? $leadFields['email'] : '',
             array_key_exists('firstname', $leadFields) ? $leadFields['firstname'] : '',
             array_key_exists('lastname', $leadFields) ? $leadFields['lastname'] : '',
@@ -70,7 +61,7 @@ trait CitrixStartTrait
 
                     $emailEntity = $this->emailModel->getEntity($emailId);
 
-                    //make sure the email still exists and is published
+                    // make sure the email still exists and is published
                     if (null !== $emailEntity && $emailEntity->isPublished()) {
                         $content = $emailEntity->getCustomHtml();
                         // replace tokens
@@ -102,8 +93,8 @@ trait CitrixStartTrait
 
                     // add event to DB
                     $eventName = CitrixHelper::getCleanString(
-                            $productToStart['productTitle']
-                        ).'_#'.$productToStart['productId'];
+                        $productToStart['productTitle']
+                    ).'_#'.$productToStart['productId'];
 
                     $this->citrixModel->addEvent(
                         $product,

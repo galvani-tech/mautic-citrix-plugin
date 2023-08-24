@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MauticPlugin\MauticCitrixBundle\Integration;
 
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;

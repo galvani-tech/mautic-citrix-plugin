@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MauticPlugin\MauticCitrixBundle\EventListener;
 
 use Mautic\CampaignBundle\CampaignEvents;
@@ -24,7 +26,6 @@ class CampaignSubscriber implements EventSubscriberInterface
         private CitrixModel $citrixModel,
         private TranslatorInterface $translator,
     ) {
-
     }
 
     /** {@inheritdoc} */

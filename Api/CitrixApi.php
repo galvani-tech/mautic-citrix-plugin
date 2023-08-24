@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MauticPlugin\MauticCitrixBundle\Api;
 
 use Mautic\PluginBundle\Exception\ApiErrorException;
@@ -32,7 +34,7 @@ class CitrixApi
      */
     protected function _request($operation, array $settings, $route = 'rest', $refreshToken = true)
     {
-        $message = null;
+        $message         = null;
         $requestSettings = [
             'encode_parameters'   => 'json',
             'return_raw'          => 'true', // needed to get the HTTP status code in the response
@@ -108,6 +110,7 @@ class CitrixApi
     private function isInvalidTokenFromReponse(ResponseInterface $request)
     {
         $responseData = $this->integration->parseCallbackResponse($request->getBody());
+
         return isset($responseData['int_err_code']) && 'InvalidToken' == $responseData['int_err_code'];
     }
 }

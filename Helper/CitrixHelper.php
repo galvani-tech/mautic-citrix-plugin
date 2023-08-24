@@ -1,8 +1,7 @@
 <?php
 
-/**
- * @deprecated
- */
+declare(strict_types=1);
+
 namespace MauticPlugin\MauticCitrixBundle\Helper;
 
 use Mautic\CoreBundle\Helper\DateTimeHelper;
@@ -21,7 +20,7 @@ use Symfony\Component\Security\Core\Exception\AuthenticationException;
 
 class CitrixHelper
 {
-    public const APPROVED_VALUE = 'APPROVED';
+    public const APPROVED_VALUE                      = 'APPROVED';
     private static ?\Psr\Log\LoggerInterface $logger = null;
 
     private static ?\Mautic\PluginBundle\Helper\IntegrationHelper $integrationHelper = null;
@@ -45,7 +44,7 @@ class CitrixHelper
     {
         static $g2mapi;
         if (null === $g2mapi) {
-            $class  = '\\' . \MauticPlugin\MauticCitrixBundle\Api\GotomeetingApi::class;
+            $class  = '\\'.\MauticPlugin\MauticCitrixBundle\Api\GotomeetingApi::class;
             $g2mapi = new $class(self::getIntegration('Gotomeeting'));
         }
 
@@ -61,7 +60,7 @@ class CitrixHelper
     {
         static $g2wapi;
         if (null === $g2wapi) {
-            $class  = '\\' . \MauticPlugin\MauticCitrixBundle\Api\GotowebinarApi::class;
+            $class  = '\\'.\MauticPlugin\MauticCitrixBundle\Api\GotowebinarApi::class;
             $g2wapi = new $class(self::getIntegration('Gotowebinar'));
         }
 
@@ -77,7 +76,7 @@ class CitrixHelper
     {
         static $g2tapi;
         if (null === $g2tapi) {
-            $class  = '\\' . \MauticPlugin\MauticCitrixBundle\Api\GototrainingApi::class;
+            $class  = '\\'.\MauticPlugin\MauticCitrixBundle\Api\GototrainingApi::class;
             $g2tapi = new $class(self::getIntegration('Gototraining'));
         }
 
@@ -93,7 +92,7 @@ class CitrixHelper
     {
         static $g2aapi;
         if (null === $g2aapi) {
-            $class  = '\\' . \MauticPlugin\MauticCitrixBundle\Api\GotoassistApi::class;
+            $class  = '\\'.\MauticPlugin\MauticCitrixBundle\Api\GotoassistApi::class;
             $g2aapi = new $class(self::getIntegration('Gotoassist'));
         }
 
@@ -101,7 +100,6 @@ class CitrixHelper
     }
 
     /**
-     * @param        $msg
      * @param string $level
      */
     public static function log($msg, $level = 'error'): void
@@ -115,8 +113,6 @@ class CitrixHelper
 
     /**
      * @param array $results
-     * @param       $key
-     * @param       $value
      *
      * @return \Generator
      */
@@ -178,6 +174,7 @@ class CitrixHelper
                     $params['toTime']   = $toTime;
                 }
                 $results = self::getG2wApi()->request($url, $params);
+
                 return iterator_to_array(self::getKeyPairs($results, 'webinarID', 'subject'));
             } elseif ('meeting' === $listType) {
                 $url    = 'upcomingMeetings';
@@ -188,9 +185,11 @@ class CitrixHelper
                     $params['endDate']   = $toTime;
                 }
                 $results = self::getG2mApi()->request($url, $params);
+
                 return iterator_to_array(self::getKeyPairs($results, 'meetingId', 'subject'));
             } elseif ('training' === $listType) {
                 $results = self::getG2tApi()->request('trainings');
+
                 return iterator_to_array(self::getKeyPairs($results, 'trainingKey', 'name'));
             } elseif ('assist' === $listType) {
                 // show sessions in the last month
@@ -244,8 +243,6 @@ class CitrixHelper
     }
 
     /**
-     * @param $integration
-     *
      * @return GotowebinarIntegration|AbstractIntegration
      */
     private static function getIntegration($integration)
@@ -260,8 +257,6 @@ class CitrixHelper
     }
 
     /**
-     * @param $listType
-     *
      * @return mixed
      */
     private static function listToIntegration($listType): string
@@ -306,12 +301,6 @@ class CitrixHelper
     }
 
     /**
-     * @param $product
-     * @param $productId
-     * @param $email
-     * @param $firstname
-     * @param $lastname
-     *
      * @return string
      *
      * @throws \Symfony\Component\HttpKernel\Exception\BadRequestHttpException
@@ -344,7 +333,7 @@ class CitrixHelper
                 );
             }
 
-            if (!is_array($response) || !array_key_exists('joinUrl', $response)) {          //response has key and registration url
+            if (!is_array($response) || !array_key_exists('joinUrl', $response)) {          // response has key and registration url
                 throw new BadRequestHttpException('Unable to register!');
             }
 
@@ -356,12 +345,6 @@ class CitrixHelper
     }
 
     /**
-     * @param $product
-     * @param $productId
-     * @param $email
-     * @param $firstname
-     * @param $lastname
-     *
      * @return bool
      *
      * @throws \Symfony\Component\HttpKernel\Exception\BadRequestHttpException
@@ -373,11 +356,13 @@ class CitrixHelper
                 $response = self::getG2mApi()->request(
                     'meetings/'.$productId.'/start'
                 );
+
                 return (is_array($response) && array_key_exists('hostURL', $response)) ? $response['hostURL'] : '';
             } elseif (CitrixProducts::GOTOTRAINING === $product) {
                 $response = self::getG2tApi()->request(
                     'trainings/'.$productId.'/start'
                 );
+
                 return (is_array($response) && array_key_exists('hostURL', $response)) ? $response['hostURL'] : '';
             } elseif (CitrixProducts::GOTOASSIST === $product) {
                 // TODO: use the sessioncallback to update attendance status
@@ -401,6 +386,7 @@ class CitrixHelper
                     $params,
                     'POST'
                 );
+
                 return (is_array($response)
                     && array_key_exists(
                         'startScreenSharing',
@@ -431,12 +417,15 @@ class CitrixHelper
     {
         if (CitrixProducts::GOTOWEBINAR === $product) {
             $result = self::getG2wApi()->request($product.'s/'.$productId);
+
             return $result['subject'];
         } elseif (CitrixProducts::GOTOMEETING === $product) {
             $result = self::getG2mApi()->request($product.'s/'.$productId);
+
             return $result[0]['subject'];
         } elseif (CitrixProducts::GOTOTRAINING === $product) {
             $result = self::getG2tApi()->request($product.'s/'.$productId);
+
             return $result['name'];
         }
 
@@ -510,9 +499,6 @@ class CitrixHelper
         return self::extractContacts($result);
     }
 
-    /**
-     * @param $results
-     */
     protected static function extractContacts(array $results, bool $approvedOnly = false): array
     {
         $contacts = [];

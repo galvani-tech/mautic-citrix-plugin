@@ -1,13 +1,6 @@
 <?php
 
-/*
- * @copyright   2016 Mautic Contributors. All rights reserved
- * @author      Mautic, Inc.
- *
- * @link        https://mautic.org
- *
- * @license     GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
- */
+declare(strict_types=1);
 
 namespace MauticPlugin\MauticCitrixBundle\Entity;
 
@@ -22,10 +15,11 @@ class CitrixEventRepository extends CommonRepository
     /**
      * Fetch the base event data from the database.
      *
-     * @param string    $product
-     * @param string    $eventType
+     * @param string $product
+     * @param string $eventType
      *
      * @return mixed
+     *
      * @throws \InvalidArgumentException
      */
     public function getEvents($product, $eventType, \DateTime $fromDate = null)
@@ -52,7 +46,6 @@ class CitrixEventRepository extends CommonRepository
     }
 
     /**
-     * @param      $product
      * @param null $leadId
      *
      * @return array
@@ -131,7 +124,6 @@ class CitrixEventRepository extends CommonRepository
 
     /**
      * @param \Doctrine\ORM\QueryBuilder|\Doctrine\DBAL\Query\QueryBuilder $q
-     * @param                                                              $filter
      *
      * @return array
      */
@@ -142,7 +134,6 @@ class CitrixEventRepository extends CommonRepository
 
     /**
      * @param \Doctrine\ORM\QueryBuilder|\Doctrine\DBAL\Query\QueryBuilder $q
-     * @param                                                              $filter
      *
      * @return array
      */

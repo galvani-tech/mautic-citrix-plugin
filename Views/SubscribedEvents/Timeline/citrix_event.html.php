@@ -1,4 +1,5 @@
-<?php /** @noinspection ALL */
+<?php declare(strict_types=1);
+/** @noinspection ALL */
 
 /*
  * @copyright   2016 Mautic Contributors. All rights reserved
@@ -24,7 +25,7 @@
                     '%date%'  => $view['date']->toFullConcat($event['timestamp']),
                     '%event%' => $event['eventLabel'],
                 ]));
-                ?>
+?>
 			</p>
 	    </div>
 		<div class="panel-footer">

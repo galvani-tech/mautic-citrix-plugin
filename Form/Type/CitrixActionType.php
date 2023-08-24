@@ -1,13 +1,6 @@
 <?php
 
-/*
- * @copyright   2016 Mautic Contributors. All rights reserved
- * @author      Mautic
- *
- * @link        http://mautic.org
- *
- * @license     GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
- */
+declare(strict_types=1);
 
 namespace MauticPlugin\MauticCitrixBundle\Form\Type;
 
@@ -68,7 +61,7 @@ class CitrixActionType extends AbstractType
                 array_merge(
                     ['button', 'freetext', 'captcha'],
                     array_map(
-                        fn($p): string => 'plugin.citrix.select.'.$p,
+                        fn ($p): string => 'plugin.citrix.select.'.$p,
                         CitrixProducts::toArray()
                     )
                 ),

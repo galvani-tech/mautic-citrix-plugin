@@ -1,13 +1,6 @@
 <?php
 
-/*
- * @copyright   2016 Mautic Contributors. All rights reserved
- * @author      Mautic
- *
- * @link        http://mautic.org
- *
- * @license     GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
- */
+declare(strict_types=1);
 
 namespace MauticPlugin\MauticCitrixBundle\Model;
 
@@ -58,13 +51,13 @@ class CitrixModel extends FormModel
     }
 
     /**
-     * @param string    $product
-     * @param string    $email
-     * @param string    $eventName
-     * @param string    $eventDesc
-     * @param Lead      $lead
-     * @param string    $eventType
-     * @param string    $joinURL
+     * @param string $product
+     * @param string $email
+     * @param string $eventName
+     * @param string $eventDesc
+     * @param Lead   $lead
+     * @param string $eventType
+     * @param string $joinURL
      *
      * @throws \Doctrine\ORM\ORMInvalidArgumentException
      * @throws \Doctrine\ORM\OptimisticLockException
@@ -135,7 +128,7 @@ class CitrixModel extends FormModel
         $emails = [];
         if ([] !== $citrixEvents) {
             $emails = array_map(
-                fn(CitrixEvent $citrixEvent) => $citrixEvent->getEmail(),
+                fn (CitrixEvent $citrixEvent) => $citrixEvent->getEmail(),
                 $citrixEvents
             );
         }
@@ -161,7 +154,7 @@ class CitrixModel extends FormModel
         $items = $query->getResult();
 
         return array_map(
-            fn($item) => array_pop($item),
+            fn ($item) => array_pop($item),
             $items
         );
     }
@@ -236,10 +229,6 @@ class CitrixModel extends FormModel
     }
 
     /**
-     * @param      $product
-     * @param      $productId
-     * @param      $eventName
-     * @param      $eventDesc
      * @param int  $count
      * @param null $output
      */
@@ -291,10 +280,10 @@ class CitrixModel extends FormModel
     }
 
     /**
-     * @param string          $product
-     * @param string          $eventName
-     * @param string          $eventDesc
-     * @param string          $eventType
+     * @param string $product
+     * @param string $eventName
+     * @param string $eventDesc
+     * @param string $eventType
      *
      * @return int
      *
@@ -361,8 +350,8 @@ class CitrixModel extends FormModel
                     $output->writeln(
                         ' + '.$email.' '.$eventType.' to '.
                         substr($citrixEvent->getEventName(), 0, 40).((strlen(
-                                $citrixEvent->getEventName()
-                            ) > 40) ? '...' : '.')
+                            $citrixEvent->getEventName()
+                        ) > 40) ? '...' : '.')
                     );
                 }
                 ++$count;
@@ -389,8 +378,8 @@ class CitrixModel extends FormModel
                     $output->writeln(
                         ' - '.$citrixEvent->getEmail().' '.$eventType.' from '.
                         substr($citrixEvent->getEventName(), 0, 40).((strlen(
-                                $citrixEvent->getEventName()
-                            ) > 40) ? '...' : '.')
+                            $citrixEvent->getEventName()
+                        ) > 40) ? '...' : '.')
                     );
                 }
                 ++$count;
@@ -413,9 +402,6 @@ class CitrixModel extends FormModel
     }
 
     /**
-     * @param $found
-     * @param $known
-     *
      * @return array
      */
     private function filterEventContacts($found, $known)
@@ -425,7 +411,7 @@ class CitrixModel extends FormModel
         $delete = array_diff($known, array_map('strtolower', array_keys($found)));
         $add    = array_filter(
             $found,
-            fn($key) => !in_array(strtolower($key), $known),
+            fn ($key) => !in_array(strtolower($key), $known),
             ARRAY_FILTER_USE_KEY
         );
 

@@ -1,13 +1,6 @@
 <?php
 
-/*
- * @copyright   2016 Mautic Contributors. All rights reserved
- * @author      Mautic
- *
- * @link        http://mautic.org
- *
- * @license     GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
- */
+declare(strict_types=1);
 
 namespace MauticPlugin\MauticCitrixBundle\EventListener;
 
@@ -460,7 +453,7 @@ class FormSubscriber implements EventSubscriberInterface
      */
     public function onFormBuilder(Events\FormBuilderEvent $event): void
     {
-        $activeProducts = array_filter(CitrixProducts::toArray(), fn($product) => CitrixHelper::isAuthorized('Goto'.$product));
+        $activeProducts = array_filter(CitrixProducts::toArray(), fn ($product) => CitrixHelper::isAuthorized('Goto'.$product));
 
         if ([] === $activeProducts) {
             return;

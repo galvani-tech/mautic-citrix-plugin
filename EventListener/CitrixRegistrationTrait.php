@@ -1,13 +1,6 @@
 <?php
 
-/*
- * @copyright   2016 Mautic Contributors. All rights reserved
- * @author      Mautic, Inc.
- *
- * @link        https://mautic.org
- *
- * @license     GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
- */
+declare(strict_types=1);
 
 namespace MauticPlugin\MauticCitrixBundle\EventListener;
 
@@ -32,7 +25,7 @@ trait CitrixRegistrationTrait
     public function registerProduct($product, $currentLead, array $productsToRegister)
     {
         $leadFields                         = $currentLead->getProfileFields();
-        [$email, $firstname, $lastname] = [
+        [$email, $firstname, $lastname]     = [
             array_key_exists('email', $leadFields) ? $leadFields['email'] : '',
             array_key_exists('firstname', $leadFields) ? $leadFields['firstname'] : '',
             array_key_exists('lastname', $leadFields) ? $leadFields['lastname'] : '',
@@ -51,8 +44,8 @@ trait CitrixRegistrationTrait
                 );
 
                 $eventName = CitrixHelper::getCleanString(
-                        $productToRegister['productTitle']
-                    ).'_#'.$productToRegister['productId'];
+                    $productToRegister['productTitle']
+                ).'_#'.$productToRegister['productId'];
 
                 $this->citrixModel->addEvent(
                     $product,

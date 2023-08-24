@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MauticPlugin\MauticCitrixBundle\EventListener;
 
 use Mautic\LeadBundle\Event\LeadListFilteringEvent;
@@ -12,18 +14,12 @@ use MauticPlugin\MauticCitrixBundle\Helper\CitrixHelper;
 use MauticPlugin\MauticCitrixBundle\Helper\CitrixProducts;
 use MauticPlugin\MauticCitrixBundle\Model\CitrixModel;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Symfony\Component\Translation\TranslatorInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 class LeadSubscriber implements EventSubscriberInterface
 {
-    /**
-     * @var TranslatorInterface
-     */
-    private $translator;
-
     public function __construct(private CitrixModel $model, TranslatorInterface $translator)
     {
-        $this->translator = $translator;
     }
 
     /**
@@ -235,8 +231,8 @@ class LeadSubscriber implements EventSubscriberInterface
                 if (!is_iterable($eventNames)) {
                     $eventNames = [$eventNames];
                 }
-                $isAnyEvent = in_array('any', $eventNames, true);
-                $eventNames = array_map(fn($v) => $q->expr()->literal($v), $eventNames);
+                $isAnyEvent    = in_array('any', $eventNames, true);
+                $eventNames    = array_map(fn ($v) => $q->expr()->literal($v), $eventNames);
                 $subQueriesSQL = [];
 
                 $eventTypes = [CitrixEventTypes::REGISTERED, CitrixEventTypes::ATTENDED];
@@ -264,7 +260,7 @@ class LeadSubscriber implements EventSubscriberInterface
                         );
                     }
 
-                    if ($leadId !== 0) {
+                    if (0 !== $leadId) {
                         $query->andWhere(
                             $query->expr()->eq($alias.$k.'.lead_id', $leadId)
                         );

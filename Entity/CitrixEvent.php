@@ -1,13 +1,6 @@
 <?php
 
-/*
- * @copyright   2016 Mautic Contributors. All rights reserved
- * @author      Mautic
- *
- * @link        http://mautic.org
- *
- * @license     GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
- */
+declare(strict_types=1);
 
 namespace MauticPlugin\MauticCitrixBundle\Entity;
 
@@ -17,13 +10,16 @@ use Mautic\LeadBundle\Entity\Lead;
 
 /**
  * @ORM\Table(name="plugin_citrix_events")
+ *
  * @ORM\Entity
  */
 class CitrixEvent
 {
     /**
      * @ORM\Column(name="id", type="integer")
+     *
      * @ORM\Id
+     *
      * @ORM\GeneratedValue(strategy="AUTO")
      */
     protected $id;
@@ -65,7 +61,7 @@ class CitrixEvent
 
     public function __construct()
     {
-        $this->eventDate = new \Datetime();
+        $this->eventDate = new \DateTime();
     }
 
     public static function loadMetadata(ORM\ClassMetadata $metadata): void
@@ -123,8 +119,6 @@ class CitrixEvent
     }
 
     /**
-     * @param $product
-     *
      * @return $this
      */
     public function setProduct($product)
@@ -196,8 +190,6 @@ class CitrixEvent
     }
 
     /**
-     * @param $eventName
-     *
      * @return $this
      */
     public function setEventName($eventName)
@@ -234,8 +226,6 @@ class CitrixEvent
     }
 
     /**
-     * @param $eventType
-     *
      * @return $this
      */
     public function setEventType($eventType)
@@ -246,8 +236,6 @@ class CitrixEvent
     }
 
     /**
-     * @param $eventDesc
-     *
      * @return $this
      */
     public function setEventDesc($eventDesc)

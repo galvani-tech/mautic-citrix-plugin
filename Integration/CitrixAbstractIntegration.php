@@ -1,13 +1,6 @@
 <?php
 
-/*
- * @copyright   2016 Mautic Contributors. All rights reserved
- * @author      Mautic
- *
- * @link        http://mautic.org
- *
- * @license     GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
- */
+declare(strict_types=1);
 
 namespace MauticPlugin\MauticCitrixBundle\Integration;
 
@@ -31,7 +24,7 @@ abstract class CitrixAbstractIntegration extends AbstractIntegration
 
     public function setIntegrationSettings(Integration $settings): void
     {
-        //make sure URL does not have ending /
+        // make sure URL does not have ending /
         $keys = $this->getDecryptedApiKeys($settings);
         if (array_key_exists('url', $keys) && str_ends_with($keys['url'], '/')) {
             $keys['url'] = substr($keys['url'], 0, -1);
@@ -163,8 +156,6 @@ abstract class CitrixAbstractIntegration extends AbstractIntegration
 
     /**
      * {@inheritdoc}
-     *
-     * @param $data
      */
     public function prepareResponseForExtraction($data)
     {
