@@ -11,10 +11,8 @@
 
 namespace MauticPlugin\MauticCitrixBundle\EventListener;
 
-use Exception;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\EntityManager;
-use Mautic\CoreBundle\Helper\TemplatingHelper;
 use Mautic\FormBundle\Entity\Action;
 use Mautic\FormBundle\Entity\Field;
 use Mautic\FormBundle\Entity\Form;
@@ -37,41 +35,22 @@ use MauticPlugin\MauticCitrixBundle\Model\CitrixModel;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Process\Exception\InvalidArgumentException;
-use Symfony\Component\Translation\TranslatorInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
+use Twig\Environment;
 
 class FormSubscriber implements EventSubscriberInterface
 {
     use CitrixRegistrationTrait;
     use CitrixStartTrait;
 
-    /**
-     * @var CitrixModel
-     */
-    private $citrixModel;
-
-    /**
-     * @var TranslatorInterface
-     */
-    private $translator;
-
-    /**
-     * ヽ(ಠ_ಠ)ノ Used in the CitrixStartTrait.
-     *
-     * @var TemplatingHelper
-     */
-    private $templating;
-
     public function __construct(
-        CitrixModel $citrixModel,
+        private CitrixModel $citrixModel,
         private FormModel $formModel,
         private SubmissionModel $submissionModel,
-        TranslatorInterface $translator,
+        private TranslatorInterface $translator,
         private EntityManager $entityManager,
-        TemplatingHelper $templating
+        private Environment $templating
     ) {
-        $this->citrixModel     = $citrixModel;
-        $this->translator      = $translator;
-        $this->templating      = $templating;
     }
 
     public static function getSubscribedEvents()
@@ -130,7 +109,7 @@ class FormSubscriber implements EventSubscriberInterface
                 }
             }
 
-            $productsToRegister = self::_getProductsFromPost($actions, $fields, $post, $product);
+            $productsToRegister = $this->_getProductsFromPost($actions, $fields, $post, $product);
             if ('assist' === $product || ([] !== $productsToRegister)) {
                 $results = $submission->getResults();
 
@@ -191,7 +170,7 @@ class FormSubscriber implements EventSubscriberInterface
             } else {
                 throw new BadRequestHttpException('There are no products to '.((null === $startType) ? 'register' : 'start'));
             } // end-block
-        } catch (Exception $ex) {
+        } catch (\Exception $ex) {
             CitrixHelper::log('onProductRegistration - '.$product.': '.$ex->getMessage());
             $validationException = new ValidationException($ex->getMessage());
             $validationException->setViolations(
@@ -260,11 +239,13 @@ class FormSubscriber implements EventSubscriberInterface
                 $values = [$values];
             }
 
-            foreach ($values as $value) {
-                if (!array_key_exists($value, $list)) {
-                    $event->failedValidation(
-                        $value.': '.$this->translator->trans('plugin.citrix.'.$eventType.'.nolongeravailable')
-                    );
+            if (is_array($values) || is_object($values)) {
+                foreach ($values as $value) {
+                    if (!array_key_exists($value, $list)) {
+                        $event->failedValidation(
+                            $value.': '.$this->translator->trans('plugin.citrix.'.$eventType.'.nolongeravailable')
+                        );
+                    }
                 }
             }
         }
@@ -278,7 +259,7 @@ class FormSubscriber implements EventSubscriberInterface
      *
      * @return array
      */
-    private static function _getProductsFromPost($actions, $fields, $post, $product)
+    private function _getProductsFromPost($actions, $fields, $post, $product)
     {
         /** @var array $productlist */
         $productlist = [];
@@ -296,15 +277,17 @@ class FormSubscriber implements EventSubscriberInterface
                 if (!is_array($productIds) && !is_object($productIds)) {
                     $productIds = [$productIds];
                 }
-                foreach ($productIds as $productId) {
-                    $products[] = [
-                        'fieldName'    => $alias,
-                        'productId'    => $productId,
-                        'productTitle' => array_key_exists(
-                            $productId,
-                            $productlist
-                        ) ? $productlist[$productId] : 'untitled',
-                    ];
+                if (is_array($productIds) || is_object($productIds)) {
+                    foreach ($productIds as $productId) {
+                        $products[] = [
+                            'fieldName'    => $alias,
+                            'productId'    => $productId,
+                            'productTitle' => array_key_exists(
+                                $productId,
+                                $productlist
+                            ) ? $productlist[$productId] : 'untitled',
+                        ];
+                    }
                 }
             }
         }
@@ -371,100 +354,103 @@ class FormSubscriber implements EventSubscriberInterface
         $errors  = [];
         $actions = $form->getActions();
         $fields  = $form->getFields();
-        $actionFields = [
-            'register.webinar'     => ['email', 'firstname', 'lastname'],
-            'register.training'    => ['email', 'firstname', 'lastname'],
-            'start.meeting'        => ['email'],
-            'start.training'       => ['email'],
-            'screensharing.assist' => ['email', 'firstname', 'lastname'],
-        ];
-        $errorMessages = [
-            'lead_field_not_found' => $this->translator->trans(
-                'plugin.citrix.formaction.validator.leadfieldnotfound'
-            ),
-            'field_not_found'          => $this->translator->trans('plugin.citrix.formaction.validator.fieldnotfound'),
-            'field_should_be_required' => $this->translator->trans(
-                'plugin.citrix.formaction.validator.fieldshouldberequired'
-            ),
-        ];
-        /** @var Action $action */
-        foreach ($actions as $action) {
-            if (str_starts_with($action->getType(), 'plugin.citrix.action')) {
-                $actionProduct = preg_filter('/^.+\.([^\.]+)$/', '$1', $action->getType());
-                if (!CitrixHelper::isAuthorized('Goto'.$actionProduct)) {
-                    continue;
-                }
-                $actionAction = preg_filter('/^.+\.([^\.]+\.[^\.]+)$/', '$1', $action->getType());
 
-                // get lead fields
-                $currentLeadFields = [];
-                foreach ($fields as $field) {
-                    $leadField = $field->getLeadField();
-                    if ('' !== $leadField) {
-                        $currentLeadFields[$leadField] = $field->getIsRequired();
+        if ($actions instanceof \Doctrine\Common\Collections\ArrayCollection && $fields instanceof \Doctrine\Common\Collections\ArrayCollection) {
+            $actionFields = [
+                'register.webinar'     => ['email', 'firstname', 'lastname'],
+                'register.training'    => ['email', 'firstname', 'lastname'],
+                'start.meeting'        => ['email'],
+                'start.training'       => ['email'],
+                'screensharing.assist' => ['email', 'firstname', 'lastname'],
+            ];
+
+            $errorMessages = [
+                'lead_field_not_found' => $this->translator->trans(
+                    'plugin.citrix.formaction.validator.leadfieldnotfound'
+                ),
+                'field_not_found'          => $this->translator->trans('plugin.citrix.formaction.validator.fieldnotfound'),
+                'field_should_be_required' => $this->translator->trans(
+                    'plugin.citrix.formaction.validator.fieldshouldberequired'
+                ),
+            ];
+
+            /** @var Action $action */
+            foreach ($actions as $action) {
+                if (str_starts_with($action->getType(), 'plugin.citrix.action')) {
+                    $actionProduct = preg_filter('/^.+\.([^\.]+)$/', '$1', $action->getType());
+                    if (!CitrixHelper::isAuthorized('Goto'.$actionProduct)) {
+                        continue;
                     }
-                }
+                    $actionAction = preg_filter('/^.+\.([^\.]+\.[^\.]+)$/', '$1', $action->getType());
 
-                $props = $action->getProperties();
-                if (array_key_exists('product', $props) && 'form' === $props['product']) {
-                    // the product will be selected from a list in the form
-                    // search for the select field and perform validation for a corresponding action
-
-                    $hasCitrixListField = false;
-                    /** @var Field $field */
+                    // get lead fields
+                    $currentLeadFields = [];
                     foreach ($fields as $field) {
-                        $fieldProduct = preg_filter('/^.+\.([^\.]+)$/', '$1', $field->getType());
-                        if ($fieldProduct === $actionProduct) {
-                            $hasCitrixListField = true;
-                            if (!$field->getIsRequired()) {
-                                $errors[$fieldProduct.'required'] = sprintf(
-                                    $errorMessages['field_should_be_required'],
-                                    $this->translator->trans('plugin.citrix.'.$fieldProduct.'.listfield')
-                                );
-                            }
+                        $leadField = $field->getLeadField();
+                        if ('' !== $leadField) {
+                            $currentLeadFields[$leadField] = $field->getIsRequired();
                         }
-                    } // foreach $fields
-
-                    if (!$hasCitrixListField) {
-                        $errors[$actionProduct.'listfield'] = sprintf(
-                            $errorMessages['field_not_found'],
-                            $this->translator->trans('plugin.citrix.'.$actionProduct.'.listfield')
-                        );
                     }
-                }
 
-                // check that the corresponding fields for the values in the form exist
-                /** @var array $mandatoryActionFields */
-                $mandatoryActionFields = $actionFields[$actionAction];
-                foreach ($mandatoryActionFields as $actionField) {
-                    /** @var Field $field */
-                    $field = $fields->get($props[$actionField]);
-                    if (null === $field) {
-                        $errors[$actionField.'notfound'] = sprintf($errorMessages['lead_field_not_found'], $actionField);
-                        break;
-                    } elseif (!$field->getIsRequired()) {
-                        $errors[$actionField.'required'] = sprintf($errorMessages['field_should_be_required'], $actionField);
-                        break;
-                    }
-                }
+                    $props = $action->getProperties();
+                    if (array_key_exists('product', $props) && 'form' === $props['product']) {
+                        // the product will be selected from a list in the form
+                        // search for the select field and perform validation for a corresponding action
 
-                // check for lead fields
-                /** @var array $mandatoryFields */
-                $mandatoryFields = $actionFields[$actionAction];
-                foreach ($mandatoryFields as $mandatoryField) {
-                    if (!array_key_exists($mandatoryField, $currentLeadFields)) {
-                        $errors[$mandatoryField.'notfound'] = sprintf($errorMessages['lead_field_not_found'], $mandatoryField);
-                    } elseif (!$currentLeadFields[$mandatoryField]) {
-                        $errors[$mandatoryField.'required'] = sprintf(
-                            $errorMessages['field_should_be_required'],
-                            $mandatoryField
-                        );
+                        $hasCitrixListField = false;
+                        /** @var Field $field */
+                        foreach ($fields as $field) {
+                            $fieldProduct = preg_filter('/^.+\.([^\.]+)$/', '$1', $field->getType());
+                            if ($fieldProduct === $actionProduct) {
+                                $hasCitrixListField = true;
+                                if (!$field->getIsRequired()) {
+                                    $errors[$fieldProduct.'required'] = sprintf(
+                                        $errorMessages['field_should_be_required'],
+                                        $this->translator->trans('plugin.citrix.'.$fieldProduct.'.listfield')
+                                    );
+                                }
+                            }
+                        } // foreach $fields
+
+                        if (!$hasCitrixListField) {
+                            $errors[$actionProduct.'listfield'] = sprintf(
+                                $errorMessages['field_not_found'],
+                                $this->translator->trans('plugin.citrix.'.$actionProduct.'.listfield')
+                            );
+                        }
                     }
-                }
-            } // end-if there is a Citrix action
+
+                    // check that the corresponding fields for the values in the form exist
+                    /** @var array $mandatoryActionFields */
+                    $mandatoryActionFields = $actionFields[$actionAction];
+                    foreach ($mandatoryActionFields as $actionField) {
+                        /** @var Field $field */
+                        $field = $fields->get($props[$actionField]);
+                        if (!$field instanceof \Mautic\FormBundle\Entity\Field) {
+                            $errors[$actionField.'notfound'] = sprintf($errorMessages['lead_field_not_found'], $actionField);
+                            break;
+                        } elseif (!$field->getIsRequired()) {
+                            $errors[$actionField.'required'] = sprintf($errorMessages['field_should_be_required'], $actionField);
+                            break;
+                        }
+                    }
+
+                    // check for lead fields
+                    /** @var array $mandatoryFields */
+                    $mandatoryFields = $actionFields[$actionAction];
+                    foreach ($mandatoryFields as $mandatoryField) {
+                        if (!array_key_exists($mandatoryField, $currentLeadFields)) {
+                            $errors[$mandatoryField.'notfound'] = sprintf($errorMessages['lead_field_not_found'], $mandatoryField);
+                        } elseif (!$currentLeadFields[$mandatoryField]) {
+                            $errors[$mandatoryField.'required'] = sprintf(
+                                $errorMessages['field_should_be_required'],
+                                $mandatoryField
+                            );
+                        }
+                    }
+                } // end-if there is a Citrix action
+            } // foreach $actions
         }
-        // foreach $actions
-
 
         return $errors;
     }
@@ -474,9 +460,7 @@ class FormSubscriber implements EventSubscriberInterface
      */
     public function onFormBuilder(Events\FormBuilderEvent $event): void
     {
-        $activeProducts = array_filter(CitrixProducts::toArray(), function ($product) {
-            return CitrixHelper::isAuthorized('Goto'.$product);
-        });
+        $activeProducts = array_filter(CitrixProducts::toArray(), fn($product) => CitrixHelper::isAuthorized('Goto'.$product));
 
         if ([] === $activeProducts) {
             return;

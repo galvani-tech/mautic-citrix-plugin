@@ -68,9 +68,7 @@ class CitrixActionType extends AbstractType
                 array_merge(
                     ['button', 'freetext', 'captcha'],
                     array_map(
-                        function ($p): string {
-                            return 'plugin.citrix.select.'.$p;
-                        },
+                        fn($p): string => 'plugin.citrix.select.'.$p,
                         CitrixProducts::toArray()
                     )
                 ),

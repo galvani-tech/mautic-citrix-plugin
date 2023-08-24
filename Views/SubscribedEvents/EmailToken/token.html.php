@@ -1,4 +1,4 @@
-<?php
+<?php /** @noinspection ALL */
 
 /*
  * @copyright   2016 Mautic Contributors. All rights reserved

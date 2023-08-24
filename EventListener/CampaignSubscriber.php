@@ -1,21 +1,10 @@
 <?php
 
-/*
- * @copyright   2016 Mautic Contributors. All rights reserved
- * @author      Mautic
- *
- * @link        http://mautic.org
- *
- * @license     GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
- */
-
 namespace MauticPlugin\MauticCitrixBundle\EventListener;
 
-use Exception;
 use Mautic\CampaignBundle\CampaignEvents;
 use Mautic\CampaignBundle\Event\CampaignBuilderEvent;
 use Mautic\CampaignBundle\Event\CampaignExecutionEvent;
-use Mautic\CoreBundle\Helper\TemplatingHelper;
 use MauticPlugin\MauticCitrixBundle\CitrixEvents;
 use MauticPlugin\MauticCitrixBundle\Entity\CitrixEventTypes;
 use MauticPlugin\MauticCitrixBundle\Form\Type\CitrixCampaignActionType;
@@ -24,45 +13,21 @@ use MauticPlugin\MauticCitrixBundle\Helper\CitrixHelper;
 use MauticPlugin\MauticCitrixBundle\Helper\CitrixProducts;
 use MauticPlugin\MauticCitrixBundle\Model\CitrixModel;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Symfony\Component\Translation\TranslatorInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 class CampaignSubscriber implements EventSubscriberInterface
 {
     use CitrixRegistrationTrait;
     use CitrixStartTrait;
 
-    /**
-     * @var CitrixModel
-     */
-    private $citrixModel;
-
-    /**
-     * ヽ(ಠ_ಠ)ノ Used in the CitrixStartTrait.
-     *
-     * @var TranslatorInterface
-     */
-    private $translator;
-
-    /**
-     * ヽ(ಠ_ಠ)ノ Used in the CitrixStartTrait.
-     *
-     * @var TemplatingHelper
-     */
-    private $templating;
-
     public function __construct(
-        CitrixModel $citrixModel,
-        TranslatorInterface $translator,
-        TemplatingHelper $templating
+        private CitrixModel $citrixModel,
+        private TranslatorInterface $translator,
     ) {
-        $this->citrixModel = $citrixModel;
-        $this->translator  = $translator;
-        $this->templating  = $templating;
+
     }
 
-    /**
-     * {@inheritdoc}
-     */
+    /** {@inheritdoc} */
     public static function getSubscribedEvents()
     {
         return [
@@ -136,7 +101,7 @@ class CampaignSubscriber implements EventSubscriberInterface
                 $emailId = $config['template'];
                 $this->startProduct($product, $event->getLead(), $products, $emailId, $actionId);
             }
-        } catch (Exception $ex) {
+        } catch (\Exception $ex) {
             CitrixHelper::log('onCitrixAction - '.$product.': '.$ex->getMessage());
         }
 

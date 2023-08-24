@@ -11,7 +11,6 @@
 
 namespace MauticPlugin\MauticCitrixBundle\Entity;
 
-use DateTime;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use Mautic\CoreBundle\Entity\CommonRepository;
 use Mautic\LeadBundle\Entity\TimelineTrait;
@@ -29,7 +28,7 @@ class CitrixEventRepository extends CommonRepository
      * @return mixed
      * @throws \InvalidArgumentException
      */
-    public function getEvents($product, $eventType, DateTime $fromDate = null)
+    public function getEvents($product, $eventType, \DateTime $fromDate = null)
     {
         $q = $this->createQueryBuilder('c');
 
@@ -38,7 +37,7 @@ class CitrixEventRepository extends CommonRepository
             $q->expr()->eq('c.event_type', ':eventType')
         );
 
-        if ($fromDate instanceof DateTime) {
+        if ($fromDate instanceof \DateTime) {
             $expr->add(
                 $q->expr()->gte('c.event_date', ':fromDate')
             );
@@ -62,7 +61,7 @@ class CitrixEventRepository extends CommonRepository
     {
         $eventType = null;
         if (is_array($product)) {
-            list($product, $eventType) = $product;
+            [$product, $eventType] = $product;
         }
 
         $query = $this->getEntityManager()->getConnection()->createQueryBuilder()

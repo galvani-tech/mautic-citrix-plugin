@@ -1,18 +1,10 @@
 <?php
 
-/*
- * @copyright   2016 Mautic Contributors. All rights reserved
- * @author      Mautic
- *
- * @link        http://mautic.org
- *
- * @license     GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
+/**
+ * @deprecated
  */
-
 namespace MauticPlugin\MauticCitrixBundle\Helper;
 
-use Exception;
-use DateTime;
 use Mautic\CoreBundle\Helper\DateTimeHelper;
 use Mautic\PluginBundle\Helper\IntegrationHelper;
 use Mautic\PluginBundle\Integration\AbstractIntegration;
@@ -30,23 +22,15 @@ use Symfony\Component\Security\Core\Exception\AuthenticationException;
 class CitrixHelper
 {
     public const APPROVED_VALUE = 'APPROVED';
-    /**
-     * @var LoggerInterface
-     */
-    private static $logger;
+    private static ?\Psr\Log\LoggerInterface $logger = null;
 
-    /**
-     * @var IntegrationHelper
-     */
-    private static $integrationHelper;
+    private static ?\Mautic\PluginBundle\Helper\IntegrationHelper $integrationHelper = null;
 
-    /**
-     * @var RouterInterface
-     */
-    private static $router;
+    private static ?\Symfony\Component\Routing\RouterInterface $router = null;
 
     public static function init(IntegrationHelper $helper, LoggerInterface $logger, RouterInterface $router): void
     {
+        trigger_deprecation('This should not be used anymore');
         self::$logger            = $logger;
         self::$integrationHelper = $helper;
         self::$router            = $router;
@@ -61,7 +45,7 @@ class CitrixHelper
     {
         static $g2mapi;
         if (null === $g2mapi) {
-            $class  = '\\MauticPlugin\\MauticCitrixBundle\\Api\\GotomeetingApi';
+            $class  = '\\' . \MauticPlugin\MauticCitrixBundle\Api\GotomeetingApi::class;
             $g2mapi = new $class(self::getIntegration('Gotomeeting'));
         }
 
@@ -77,7 +61,7 @@ class CitrixHelper
     {
         static $g2wapi;
         if (null === $g2wapi) {
-            $class  = '\\MauticPlugin\\MauticCitrixBundle\\Api\\GotowebinarApi';
+            $class  = '\\' . \MauticPlugin\MauticCitrixBundle\Api\GotowebinarApi::class;
             $g2wapi = new $class(self::getIntegration('Gotowebinar'));
         }
 
@@ -93,7 +77,7 @@ class CitrixHelper
     {
         static $g2tapi;
         if (null === $g2tapi) {
-            $class  = '\\MauticPlugin\\MauticCitrixBundle\\Api\\GototrainingApi';
+            $class  = '\\' . \MauticPlugin\MauticCitrixBundle\Api\GototrainingApi::class;
             $g2tapi = new $class(self::getIntegration('Gototraining'));
         }
 
@@ -109,7 +93,7 @@ class CitrixHelper
     {
         static $g2aapi;
         if (null === $g2aapi) {
-            $class  = '\\MauticPlugin\\MauticCitrixBundle\\Api\\GotoassistApi';
+            $class  = '\\' . \MauticPlugin\MauticCitrixBundle\Api\GotoassistApi::class;
             $g2aapi = new $class(self::getIntegration('Gotoassist'));
         }
 
@@ -124,7 +108,7 @@ class CitrixHelper
     {
         try {
             self::$logger->log($level, $msg);
-        } catch (Exception) {
+        } catch (\Exception) {
             // do nothing
         }
     }
@@ -225,7 +209,7 @@ class CitrixHelper
                     return iterator_to_array(self::getAssistPairs($results['sessions']));
                 }
             }
-        } catch (Exception $ex) {
+        } catch (\Exception $ex) {
             self::log($ex->getMessage());
         }
 
@@ -264,11 +248,11 @@ class CitrixHelper
      *
      * @return GotowebinarIntegration|AbstractIntegration
      */
-    private static function getIntegration($integration): GotowebinarIntegration|AbstractIntegration
+    private static function getIntegration($integration)
     {
         try {
             return self::$integrationHelper->getIntegrationObject($integration);
-        } catch (Exception) {
+        } catch (\Exception) {
             // do nothing
         }
 
@@ -365,7 +349,7 @@ class CitrixHelper
             }
 
             return $response['joinUrl'];
-        } catch (Exception $ex) {
+        } catch (\Exception $ex) {
             self::log('registerToProduct: '.$ex->getMessage());
             throw new BadRequestHttpException($ex->getMessage());
         }
@@ -427,7 +411,7 @@ class CitrixHelper
                         $response['startScreenSharing']
                     )) ? $response['startScreenSharing']['launchUrl'] : '';
             }
-        } catch (Exception $ex) {
+        } catch (\Exception $ex) {
             self::log('startProduct: '.$ex->getMessage());
             throw new BadRequestHttpException($ex->getMessage());
         }
@@ -552,7 +536,7 @@ class CitrixHelper
                         $lastname  = '';
                         break;
                     case 2:
-                        list($firstname, $lastname) = $names;
+                        [$firstname, $lastname] = $names;
                         break;
                     default:
                         $firstname = $names[0];
@@ -568,10 +552,10 @@ class CitrixHelper
             } elseif (!empty($result['email'])) {
                 $emailKey            = strtolower($result['email']);
                 $contacts[$emailKey] = [
-                    'firstname' => (isset($result['firstName'])) ? $result['firstName'] : '',
-                    'lastname'  => (isset($result['lastName'])) ? $result['lastName'] : '',
+                    'firstname' => $result['firstName'] ?? '',
+                    'lastname'  => $result['lastName'] ?? '',
                     'email'     => $result['email'],
-                    'joinUrl'   => (isset($result['joinUrl'])) ? $result['joinUrl'] : '',
+                    'joinUrl'   => $result['joinUrl'] ?? '',
                 ];
             }
 
@@ -589,7 +573,7 @@ class CitrixHelper
                 }
 
                 if ($eventDate) {
-                    $contacts[$emailKey]['event_date'] = new DateTime($eventDate);
+                    $contacts[$emailKey]['event_date'] = new \DateTime($eventDate);
                 }
             }
         }

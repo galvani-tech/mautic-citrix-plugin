@@ -46,9 +46,11 @@ trait CitrixStartTrait
     public function startProduct($product, $lead, array $productsToStart, $emailId = null, $actionId = null)
     {
         $leadFields                         = $lead->getProfileFields();
-        $email = array_key_exists('email', $leadFields) ? $leadFields['email'] : '';
-        $firstname = array_key_exists('firstname', $leadFields) ? $leadFields['firstname'] : '';
-        $lastname = array_key_exists('lastname', $leadFields) ? $leadFields['lastname'] : '';
+        [$email, $firstname, $lastname] = [
+            array_key_exists('email', $leadFields) ? $leadFields['email'] : '',
+            array_key_exists('firstname', $leadFields) ? $leadFields['firstname'] : '',
+            array_key_exists('lastname', $leadFields) ? $leadFields['lastname'] : '',
+        ];
 
         if ('' !== $email && '' !== $firstname && '' !== $lastname) {
             foreach ($productsToStart as $productToStart) {

@@ -11,7 +11,6 @@
 
 namespace MauticPlugin\MauticCitrixBundle\Command;
 
-use Exception;
 use Mautic\CoreBundle\Command\ModeratedCommand;
 use MauticPlugin\MauticCitrixBundle\Helper\CitrixHelper;
 use MauticPlugin\MauticCitrixBundle\Helper\CitrixProducts;
@@ -111,7 +110,7 @@ class SyncCommand extends ModeratedCommand
                     $output->writeln('Synchronizing: ['.$productId.'] '.$eventName);
 
                     $model->syncEvent($product, $productId, $eventName, $eventDesc, $count, $output);
-                } catch (Exception $ex) {
+                } catch (\Exception $ex) {
                     $output->writeln('<error>Error syncing '.$product.': '.$productId.'.</error>');
                     $output->writeln('<error>'.$ex->getMessage().'</error>');
                     if ('dev' === MAUTIC_ENV) {

@@ -11,8 +11,6 @@
 
 namespace MauticPlugin\MauticCitrixBundle\Entity;
 
-use Datetime;
-use DateTime;
 use Doctrine\ORM\Mapping as ORM;
 use Mautic\CoreBundle\Doctrine\Mapping\ClassMetadataBuilder;
 use Mautic\LeadBundle\Entity\Lead;
@@ -67,14 +65,14 @@ class CitrixEvent
 
     public function __construct()
     {
-        $this->eventDate = new Datetime();
+        $this->eventDate = new \Datetime();
     }
 
     public static function loadMetadata(ORM\ClassMetadata $metadata): void
     {
         $builder = new ClassMetadataBuilder($metadata);
         $builder->setTable('plugin_citrix_events')
-            ->setCustomRepositoryClass('MauticPlugin\MauticCitrixBundle\Entity\CitrixEventRepository')
+            ->setCustomRepositoryClass(\MauticPlugin\MauticCitrixBundle\Entity\CitrixEventRepository::class)
             ->addIndex(['product', 'email'], 'citrix_event_email')
             ->addIndex(['product', 'event_name', 'event_type'], 'citrix_event_name')
             ->addIndex(['product', 'event_type', 'event_date'], 'citrix_event_type')
@@ -220,7 +218,7 @@ class CitrixEvent
     /**
      * @return $this
      */
-    public function setEventDate(DateTime $eventDate)
+    public function setEventDate(\DateTime $eventDate)
     {
         $this->eventDate = $eventDate;
 

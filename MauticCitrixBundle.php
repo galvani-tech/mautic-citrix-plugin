@@ -1,32 +1,11 @@
 <?php
 
-/*
- * @copyright   2016 Mautic Contributors. All rights reserved
- * @author      Mautic
- *
- * @link        http://mautic.org
- *
- * @license     GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
- */
+declare(strict_types=1);
 
 namespace MauticPlugin\MauticCitrixBundle;
 
-use Mautic\PluginBundle\Bundle\PluginBundleBase;
-use MauticPlugin\MauticCitrixBundle\Helper\CitrixHelper;
+use Mautic\IntegrationsBundle\Bundle\AbstractPluginBundle;
 
-/**
- * Class MauticCitrixBundle.
- */
-class MauticCitrixBundle extends PluginBundleBase
+class MauticCitrixBundle extends AbstractPluginBundle
 {
-    public function boot(): void
-    {
-        parent::boot();
-
-        CitrixHelper::init(
-            $this->container->get('mautic.helper.integration'),
-            $this->container->get('monolog.logger.mautic'),
-            $this->container->get('router')
-        );
-    }
 }

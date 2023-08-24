@@ -11,7 +11,6 @@
 
 namespace MauticPlugin\MauticCitrixBundle\EventListener;
 
-use Exception;
 use Mautic\PluginBundle\Event\PluginIntegrationRequestEvent;
 use Mautic\PluginBundle\PluginEvents;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -51,11 +50,11 @@ class IntegrationRequestSubscriber implements EventSubscriberInterface
     private function getAuthorization(array $parameters): string
     {
         if (empty($parameters['client_id'])) {
-            throw new Exception('No client ID given.');
+            throw new \Exception('No client ID given.');
         }
 
         if (empty($parameters['client_secret'])) {
-            throw new Exception('No client secret given.');
+            throw new \Exception('No client secret given.');
         }
 
         return sprintf('%s:%s', $parameters['client_id'], $parameters['client_secret']);
