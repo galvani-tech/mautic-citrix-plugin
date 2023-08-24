@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MauticPlugin\MauticCitrixBundle\EventListener;
 
 use Mautic\LeadBundle\Event\LeadListFilteringEvent;
@@ -223,8 +225,8 @@ class LeadSubscriber implements EventSubscriberInterface
                 if (!is_iterable($eventNames)) {
                     $eventNames = [$eventNames];
                 }
-                $isAnyEvent = in_array('any', $eventNames, true);
-                $eventNames = array_map(fn($v) => $q->expr()->literal($v), $eventNames);
+                $isAnyEvent    = in_array('any', $eventNames, true);
+                $eventNames    = array_map(fn ($v) => $q->expr()->literal($v), $eventNames);
                 $subQueriesSQL = [];
 
                 $eventTypes = [CitrixEventTypes::REGISTERED, CitrixEventTypes::ATTENDED];

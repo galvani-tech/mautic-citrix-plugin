@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MauticPlugin\MauticCitrixBundle\Form\Type;
 
 use Mautic\EmailBundle\Form\Type\EmailListType;
@@ -59,7 +61,7 @@ class CitrixActionType extends AbstractType
                 array_merge(
                     ['button', 'freetext', 'captcha'],
                     array_map(
-                        fn($p): string => 'plugin.citrix.select.'.$p,
+                        fn ($p): string => 'plugin.citrix.select.'.$p,
                         CitrixProducts::toArray()
                     )
                 ),

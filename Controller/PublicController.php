@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MauticPlugin\MauticCitrixBundle\Controller;
 
 use Mautic\CoreBundle\Controller\CommonController;
@@ -102,8 +104,8 @@ class PublicController extends CommonController
             $productId   = $post['sessionId'];
             $eventDesc   = sprintf('%s (%s)', $productId, $post['status']);
             $eventName   = CitrixHelper::getCleanString(
-                    $eventDesc
-                ).'_#'.$productId;
+                $eventDesc
+            ).'_#'.$productId;
             $product = 'assist';
             $citrixModel->syncEvent($product, $productId, $eventName, $eventDesc);
         } catch (\Exception $ex) {

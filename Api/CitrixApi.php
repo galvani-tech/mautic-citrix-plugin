@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MauticPlugin\MauticCitrixBundle\Api;
 
 use Mautic\PluginBundle\Exception\ApiErrorException;
@@ -24,7 +26,7 @@ class CitrixApi
     /**
      * @param string $operation
      * @param string $route
-     * @param bool $refreshToken
+     * @param bool   $refreshToken
      *
      * @return mixed|string
      *
@@ -34,7 +36,7 @@ class CitrixApi
     {
         $requestSettings = [
             'encode_parameters' => 'json',
-            'return_raw' => 'true', // needed to get the HTTP status code in the response
+            'return_raw'        => 'true', // needed to get the HTTP status code in the response
         ];
 
         if (array_key_exists('requestSettings', $settings) && is_array($settings['requestSettings'])) {
@@ -55,7 +57,7 @@ class CitrixApi
             $settings['method'],
             $requestSettings
         );
-        $status = $request->getStatusCode();
+        $status  = $request->getStatusCode();
         $message = '';
 
         // Try refresh access_token with refresh_token (https://goto-developer.logmeininc.com/how-use-refresh-tokens)
@@ -102,6 +104,7 @@ class CitrixApi
     private function isInvalidTokenFromReponse(ResponseInterface $request)
     {
         $responseData = $this->integration->parseCallbackResponse($request->getBody());
+
         return isset($responseData['int_err_code']) && 'InvalidToken' == $responseData['int_err_code'];
     }
 }

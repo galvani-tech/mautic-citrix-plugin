@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MauticPlugin\MauticCitrixBundle\Integration;
 
 /**
@@ -9,18 +11,13 @@ class GotoassistIntegration extends CitrixAbstractIntegration
 {
     /**
      * {@inheritdoc}
-     *
-     * @return string
      */
-    public function getName()
+    public function getName(): string
     {
         return 'Gotoassist';
     }
 
-    /**
-     * @return string
-     */
-    public function getDisplayName()
+    public function getDisplayName(): string
     {
         return 'GoToAssist';
     }

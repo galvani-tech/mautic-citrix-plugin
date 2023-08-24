@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MauticPlugin\MauticCitrixBundle\Integration;
 
 use Mautic\PluginBundle\Entity\Integration;
@@ -20,11 +22,11 @@ abstract class CitrixAbstractIntegration extends AbstractIntegration
         return [];
     }
 
-    public function setIntegrationSettings(Integration $settings)
+    public function setIntegrationSettings(Integration $settings): void
     {
-        //make sure URL does not have ending /
+        // make sure URL does not have ending /
         $keys = $this->getDecryptedApiKeys($settings);
-        if (array_key_exists('url', $keys) && '/' === substr($keys['url'], -1)) {
+        if (array_key_exists('url', $keys) && str_ends_with($keys['url'], '/')) {
             $keys['url'] = substr($keys['url'], 0, -1);
             $this->encryptAndSetApiKeys($keys, $settings);
         }
@@ -154,8 +156,6 @@ abstract class CitrixAbstractIntegration extends AbstractIntegration
 
     /**
      * {@inheritdoc}
-     *
-     * @param $data
      */
     public function prepareResponseForExtraction($data)
     {

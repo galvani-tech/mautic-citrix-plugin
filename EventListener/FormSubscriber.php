@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MauticPlugin\MauticCitrixBundle\EventListener;
 
 use Doctrine\Common\Collections\ArrayCollection;
@@ -29,7 +31,6 @@ use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Process\Exception\InvalidArgumentException;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Twig\Environment;
-
 
 class FormSubscriber implements EventSubscriberInterface
 {
@@ -454,7 +455,7 @@ class FormSubscriber implements EventSubscriberInterface
      */
     public function onFormBuilder(Events\FormBuilderEvent $event): void
     {
-        $activeProducts = array_filter(CitrixProducts::toArray(), fn($product) => CitrixHelper::isAuthorized('Goto'.$product));
+        $activeProducts = array_filter(CitrixProducts::toArray(), fn ($product) => CitrixHelper::isAuthorized('Goto'.$product));
 
         if ([] === $activeProducts) {
             return;

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MauticPlugin\MauticCitrixBundle\Event;
 
 use Mautic\CoreBundle\Event\CommonEvent;
@@ -9,12 +11,6 @@ class CitrixEventUpdateEvent extends CommonEvent
 {
     private $email;
 
-    /**
-     * @param $product
-     * @param $eventName
-     * @param $eventDesc
-     * @param $eventType
-     */
     public function __construct(
         private $product,
         private $eventName,

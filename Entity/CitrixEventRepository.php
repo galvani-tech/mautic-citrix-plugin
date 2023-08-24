@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MauticPlugin\MauticCitrixBundle\Entity;
 
 use Doctrine\ORM\Tools\Pagination\Paginator;
@@ -13,10 +15,11 @@ class CitrixEventRepository extends CommonRepository
     /**
      * Fetch the base event data from the database.
      *
-     * @param string    $product
-     * @param string    $eventType
+     * @param string $product
+     * @param string $eventType
      *
      * @return mixed
+     *
      * @throws \InvalidArgumentException
      */
     public function getEvents($product, $eventType, \DateTime $fromDate = null)
@@ -43,7 +46,6 @@ class CitrixEventRepository extends CommonRepository
     }
 
     /**
-     * @param      $product
      * @param null $leadId
      *
      * @return array
@@ -122,7 +124,6 @@ class CitrixEventRepository extends CommonRepository
 
     /**
      * @param \Doctrine\ORM\QueryBuilder|\Doctrine\DBAL\Query\QueryBuilder $q
-     * @param                                                              $filter
      *
      * @return array
      */
@@ -133,7 +134,6 @@ class CitrixEventRepository extends CommonRepository
 
     /**
      * @param \Doctrine\ORM\QueryBuilder|\Doctrine\DBAL\Query\QueryBuilder $q
-     * @param                                                              $filter
      *
      * @return array
      */

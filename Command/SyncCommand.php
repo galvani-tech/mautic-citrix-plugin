@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MauticPlugin\MauticCitrixBundle\Command;
 
 use Mautic\CoreBundle\Command\ModeratedCommand;
@@ -94,8 +96,8 @@ class SyncCommand extends ModeratedCommand
                 try {
                     $eventDesc = $citrixChoices[$productId];
                     $eventName = CitrixHelper::getCleanString(
-                            $eventDesc
-                        ).'_#'.$productId;
+                        $eventDesc
+                    ).'_#'.$productId;
                     $output->writeln('Synchronizing: ['.$productId.'] '.$eventName);
 
                     $model->syncEvent($product, $productId, $eventName, $eventDesc, $count, $output);

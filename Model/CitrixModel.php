@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MauticPlugin\MauticCitrixBundle\Model;
 
 use Mautic\CampaignBundle\Model\EventModel;
@@ -49,14 +51,13 @@ class CitrixModel extends FormModel
     }
 
     /**
-     * @param string    $product
-     * @param string    $email
-     * @param string    $eventName
-     * @param string    $eventDesc
-     * @param Lead      $lead
-     * @param string    $eventType
-     * @param \DateTime $eventDate
-     * @param string    $joinURL
+     * @param string $product
+     * @param string $email
+     * @param string $eventName
+     * @param string $eventDesc
+     * @param Lead   $lead
+     * @param string $eventType
+     * @param string $joinURL
      *
      * @throws \Doctrine\ORM\ORMInvalidArgumentException
      * @throws \Doctrine\ORM\OptimisticLockException
@@ -64,7 +65,7 @@ class CitrixModel extends FormModel
      * @throws \Symfony\Component\DependencyInjection\Exception\ServiceCircularReferenceException
      * @throws \Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException
      */
-    public function addEvent($product, $email, $eventName, $eventDesc, $eventType, $lead, \DateTime $eventDate = null, $joinURL = null)
+    public function addEvent($product, $email, $eventName, $eventDesc, $eventType, $lead, \DateTime $eventDate = null, $joinURL = null): void
     {
         if (!CitrixProducts::isValidValue($product) || !CitrixEventTypes::isValidValue($eventType)) {
             CitrixHelper::log('addEvent: incorrect data');
@@ -79,7 +80,7 @@ class CitrixModel extends FormModel
         $citrixEvent->setEventType($eventType);
         $citrixEvent->setLead($lead);
 
-        if (null !== $eventDate) {
+        if ($eventDate instanceof \DateTime) {
             $citrixEvent->setEventDate($eventDate);
         }
 
@@ -127,11 +128,9 @@ class CitrixModel extends FormModel
         );
 
         $emails = [];
-        if (0 !== count($citrixEvents)) {
+        if ([] !== $citrixEvents) {
             $emails = array_map(
-                function (CitrixEvent $citrixEvent) {
-                    return $citrixEvent->getEmail();
-                },
+                fn (CitrixEvent $citrixEvent) => $citrixEvent->getEmail(),
                 $citrixEvents
             );
         }
@@ -157,9 +156,7 @@ class CitrixModel extends FormModel
         $items = $query->getResult();
 
         return array_map(
-            function ($item) {
-                return array_pop($item);
-            },
+            fn ($item) => array_pop($item),
             $items
         );
     }
@@ -192,8 +189,8 @@ class CitrixModel extends FormModel
             $eventId = $item['eventName'];
             $pos     = strpos($eventId, '_#');
             $eventId = substr($eventId, $pos);
-            foreach ($result as $k => $v) {
-                if (false !== strpos($k, $eventId)) {
+            foreach (array_keys($result) as $k) {
+                if (str_contains($k, $eventId)) {
                     unset($result[$k]);
                 }
             }
@@ -207,10 +204,8 @@ class CitrixModel extends FormModel
      * @param string $product
      * @param string $email
      * @param string $eventType
-     *
-     * @return int
      */
-    public function countEventsBy($product, $email, $eventType, array $eventNames = [])
+    public function countEventsBy($product, $email, $eventType, array $eventNames = []): int
     {
         if (!CitrixProducts::isValidValue($product) || !CitrixEventTypes::isValidValue($eventType)) {
             return 0; // is not a valid citrix product
@@ -218,7 +213,7 @@ class CitrixModel extends FormModel
         $dql = 'SELECT COUNT(c.id) as cant FROM MauticCitrixBundle:CitrixEvent c '.
                   ' WHERE c.product=:product and c.email=:email AND c.eventType=:eventType ';
 
-        if (0 !== count($eventNames)) {
+        if ([] !== $eventNames) {
             $dql .= 'AND c.eventName IN (:eventNames)';
         }
 
@@ -228,7 +223,7 @@ class CitrixModel extends FormModel
             ':email'     => $email,
             ':eventType' => $eventType,
         ]);
-        if (0 !== count($eventNames)) {
+        if ([] !== $eventNames) {
             $query->setParameter(':eventNames', $eventNames);
         }
 
@@ -236,14 +231,10 @@ class CitrixModel extends FormModel
     }
 
     /**
-     * @param      $product
-     * @param      $productId
-     * @param      $eventName
-     * @param      $eventDesc
      * @param int  $count
      * @param null $output
      */
-    public function syncEvent($product, $productId, $eventName, $eventDesc, &$count = 0, $output = null)
+    public function syncEvent($product, $productId, $eventName, $eventDesc, &$count = 0, $output = null): void
     {
         $registrants      = CitrixHelper::getRegistrants($product, $productId);
         $knownRegistrants = $this->getEmailsByEvent(
@@ -252,7 +243,7 @@ class CitrixModel extends FormModel
             CitrixEventTypes::REGISTERED
         );
 
-        list($registrantsToAdd, $registrantsToDelete) = $this->filterEventContacts($registrants, $knownRegistrants);
+        [$registrantsToAdd, $registrantsToDelete] = $this->filterEventContacts($registrants, $knownRegistrants);
         $count += $this->batchAddAndRemove(
             $product,
             $eventName,
@@ -271,7 +262,7 @@ class CitrixModel extends FormModel
             CitrixEventTypes::ATTENDED
         );
 
-        list($attendeesToAdd, $attendeesToDelete) = $this->filterEventContacts($attendees, $knownAttendees);
+        [$attendeesToAdd, $attendeesToDelete] = $this->filterEventContacts($attendees, $knownAttendees);
         $count += $this->batchAddAndRemove(
             $product,
             $eventName,
@@ -285,11 +276,10 @@ class CitrixModel extends FormModel
     }
 
     /**
-     * @param string          $product
-     * @param string          $eventName
-     * @param string          $eventDesc
-     * @param string          $eventType
-     * @param OutputInterface $output
+     * @param string $product
+     * @param string $eventName
+     * @param string $eventDesc
+     * @param string $eventType
      *
      * @return int
      *
@@ -316,7 +306,7 @@ class CitrixModel extends FormModel
         $newEntities = [];
 
         // Add events
-        if (0 !== count($contactsToAdd)) {
+        if ([] !== $contactsToAdd) {
             $searchEmails = array_keys($contactsToAdd);
             $leads        = array_change_key_case(
                 $this->leadModel->getRepository()->getLeadsByFieldValue('email', $searchEmails, null, true),
@@ -352,12 +342,12 @@ class CitrixModel extends FormModel
 
                 $newEntities[] = $citrixEvent;
 
-                if (null !== $output) {
+                if ($output instanceof \Symfony\Component\Console\Output\OutputInterface) {
                     $output->writeln(
                         ' + '.$email.' '.$eventType.' to '.
                         substr($citrixEvent->getEventName(), 0, 40).((strlen(
-                                $citrixEvent->getEventName()
-                            ) > 40) ? '...' : '.')
+                            $citrixEvent->getEventName()
+                        ) > 40) ? '...' : '.')
                     );
                 }
                 ++$count;
@@ -367,7 +357,7 @@ class CitrixModel extends FormModel
         }
 
         // Delete events
-        if (0 !== count($emailsToRemove)) {
+        if ([] !== $emailsToRemove) {
             $citrixEvents = $this->getRepository()->findBy(
                 [
                     'eventName' => $eventName,
@@ -380,26 +370,24 @@ class CitrixModel extends FormModel
 
             /** @var CitrixEvent $citrixEvent */
             foreach ($citrixEvents as $citrixEvent) {
-                if (null !== $output) {
+                if ($output instanceof \Symfony\Component\Console\Output\OutputInterface) {
                     $output->writeln(
                         ' - '.$citrixEvent->getEmail().' '.$eventType.' from '.
                         substr($citrixEvent->getEventName(), 0, 40).((strlen(
-                                $citrixEvent->getEventName()
-                            ) > 40) ? '...' : '.')
+                            $citrixEvent->getEventName()
+                        ) > 40) ? '...' : '.')
                     );
                 }
                 ++$count;
             }
         }
 
-        if (0 !== count($newEntities)) {
-            /** @var CitrixEvent $entity */
-            foreach ($newEntities as $entity) {
-                if ($this->dispatcher->hasListeners(CitrixEvents::ON_CITRIX_EVENT_UPDATE)) {
-                    $citrixEvent = new CitrixEventUpdateEvent($product, $eventName, $eventDesc, $eventType, $entity->getLead());
-                    $this->dispatcher->dispatch(CitrixEvents::ON_CITRIX_EVENT_UPDATE, $citrixEvent);
-                    unset($citrixEvent);
-                }
+        /** @var CitrixEvent $entity */
+        foreach ($newEntities as $entity) {
+            if ($this->dispatcher->hasListeners(CitrixEvents::ON_CITRIX_EVENT_UPDATE)) {
+                $citrixEvent = new CitrixEventUpdateEvent($product, $eventName, $eventDesc, $eventType, $entity->getLead());
+                $this->dispatcher->dispatch(CitrixEvents::ON_CITRIX_EVENT_UPDATE, $citrixEvent);
+                unset($citrixEvent);
             }
         }
 
@@ -410,9 +398,6 @@ class CitrixModel extends FormModel
     }
 
     /**
-     * @param $found
-     * @param $known
-     *
      * @return array
      */
     private function filterEventContacts($found, $known)
@@ -422,9 +407,7 @@ class CitrixModel extends FormModel
         $delete = array_diff($known, array_map('strtolower', array_keys($found)));
         $add    = array_filter(
             $found,
-            function ($key) use ($known) {
-                return !in_array(strtolower($key), $known);
-            },
+            fn ($key) => !in_array(strtolower($key), $known),
             ARRAY_FILTER_USE_KEY
         );
 

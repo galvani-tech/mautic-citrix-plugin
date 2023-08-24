@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MauticPlugin\MauticCitrixBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
@@ -56,7 +58,7 @@ class CitrixEvent
 
     public function __construct()
     {
-        $this->eventDate = new \Datetime();
+        $this->eventDate = new \DateTime();
     }
 
     public static function loadMetadata(ORM\ClassMetadata $metadata): void
@@ -110,8 +112,6 @@ class CitrixEvent
     }
 
     /**
-     * @param $product
-     *
      * @return $this
      */
     public function setProduct($product)
@@ -183,8 +183,6 @@ class CitrixEvent
     }
 
     /**
-     * @param $eventName
-     *
      * @return $this
      */
     public function setEventName($eventName)
@@ -221,8 +219,6 @@ class CitrixEvent
     }
 
     /**
-     * @param $eventType
-     *
      * @return $this
      */
     public function setEventType($eventType)
@@ -233,8 +229,6 @@ class CitrixEvent
     }
 
     /**
-     * @param $eventDesc
-     *
      * @return $this
      */
     public function setEventDesc($eventDesc)

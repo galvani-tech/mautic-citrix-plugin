@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 return [
     'name'        => 'Citrix',
     'description' => 'Enables integration with Mautic supported Citrix collaboration products.',
@@ -27,7 +29,7 @@ return [
                     'mautic.form.model.submission',
                     'translator',
                     'doctrine.orm.entity_manager',
-                    'mautic.helper.templating',
+                    'twig',
                 ],
                 'methodCalls' => [
                     'setEmailModel' => ['mautic.email.model.email'],
@@ -45,7 +47,7 @@ return [
                 'arguments' => [
                     'mautic.citrix.model.citrix',
                     'translator',
-                    'mautic.helper.templating',
+                    'twig',
                 ],
                 'methodCalls' => [
                     'setEmailModel' => ['mautic.email.model.email'],
@@ -57,7 +59,7 @@ return [
                     'mautic.citrix.model.citrix',
                     'translator',
                     'event_dispatcher',
-                    'mautic.helper.templating',
+                    'twig',
                 ],
             ],
             'mautic.citrix.stats.subscriber' => [
