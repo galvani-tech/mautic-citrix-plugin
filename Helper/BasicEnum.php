@@ -1,21 +1,21 @@
 <?php
 
-namespace MauticPlugin\MauticCitrixBundle\Helper;
+declare(strict_types=1);
 
-use ReflectionClass;
+namespace MauticPlugin\MauticCitrixBundle\Helper;
 
 abstract class BasicEnum
 {
-    private static $constCacheArray;
+    private static ?array $constCacheArray = null;
 
     private static function getConstants()
     {
         if (null === self::$constCacheArray) {
             self::$constCacheArray = [];
         }
-        $calledClass = get_called_class();
+        $calledClass = static::class;
         if (!array_key_exists($calledClass, self::$constCacheArray)) {
-            $reflect                             = new ReflectionClass($calledClass);
+            $reflect                             = new \ReflectionClass($calledClass);
             self::$constCacheArray[$calledClass] = $reflect->getConstants();
         }
 
@@ -23,7 +23,6 @@ abstract class BasicEnum
     }
 
     /**
-     * @param $name
      * @param bool $strict
      *
      * @return bool
@@ -42,7 +41,6 @@ abstract class BasicEnum
     }
 
     /**
-     * @param $value
      * @param bool $strict
      *
      * @return bool
