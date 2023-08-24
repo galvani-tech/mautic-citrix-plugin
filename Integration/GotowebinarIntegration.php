@@ -9,18 +9,13 @@ class GotowebinarIntegration extends CitrixAbstractIntegration
 {
     /**
      * {@inheritdoc}
-     *
-     * @return string
      */
-    public function getName()
+    public function getName(): string
     {
         return 'Gotowebinar';
     }
 
-    /**
-     * @return string
-     */
-    public function getDisplayName()
+    public function getDisplayName(): string
     {
         return 'GoToWebinar';
     }

@@ -7,20 +7,7 @@ use Mautic\LeadBundle\Entity\Lead;
 
 class CitrixEventUpdateEvent extends CommonEvent
 {
-    private $product;
-
-    private $eventName;
-
-    private $eventType;
-
     private $email;
-
-    private $eventDesc;
-
-    /**
-     * @var Lead
-     */
-    private $lead;
 
     /**
      * @param $product
@@ -28,14 +15,14 @@ class CitrixEventUpdateEvent extends CommonEvent
      * @param $eventDesc
      * @param $eventType
      */
-    public function __construct($product, $eventName, $eventDesc, $eventType, Lead $lead)
-    {
-        $this->product   = $product;
-        $this->eventName = $eventName;
-        $this->eventType = $eventType;
-        $this->lead      = $lead;
+    public function __construct(
+        private $product,
+        private $eventName,
+        private $eventDesc,
+        private $eventType,
+        private Lead $lead
+    ) {
         $this->email     = $lead->getEmail();
-        $this->eventDesc = $eventDesc;
     }
 
     /**

@@ -27,27 +27,27 @@ class CitrixEvent
     /**
      * @ORM\Column(name="product", type="string", length=20)
      */
-    protected $product;
+    protected $product = 'undefined';
 
     /**
      * @ORM\Column(name="email", type="string", length=255)
      */
-    protected $email;
+    protected $email = 'undefined';
 
     /**
      * @ORM\Column(name="event_name", type="string", length=255)
      */
-    protected $eventName;
+    protected $eventName = 'undefined';
 
     /**
      * @ORM\Column(name="event_desc", type="string", length=255)
      */
-    protected $eventDesc;
+    protected $eventDesc = 'undefined';
 
     /**
      * @ORM\Column(name="event_type", type="string", length=50)
      */
-    protected $eventType;
+    protected $eventType = 'undefined';
 
     /**
      * @ORM\Column(name="event_date", type="datetime")
@@ -56,19 +56,14 @@ class CitrixEvent
 
     public function __construct()
     {
-        $this->product   = 'undefined';
-        $this->email     = 'undefined';
-        $this->eventName = 'undefined';
-        $this->eventDesc = 'undefined';
         $this->eventDate = new \Datetime();
-        $this->eventType = 'undefined';
     }
 
-    public static function loadMetadata(ORM\ClassMetadata $metadata)
+    public static function loadMetadata(ORM\ClassMetadata $metadata): void
     {
         $builder = new ClassMetadataBuilder($metadata);
         $builder->setTable('plugin_citrix_events')
-            ->setCustomRepositoryClass('MauticPlugin\MauticCitrixBundle\Entity\CitrixEventRepository')
+            ->setCustomRepositoryClass(CitrixEventRepository::class)
             ->addIndex(['product', 'email'], 'citrix_event_email')
             ->addIndex(['product', 'event_name', 'event_type'], 'citrix_event_name')
             ->addIndex(['product', 'event_type', 'event_date'], 'citrix_event_type')
@@ -137,7 +132,7 @@ class CitrixEvent
     /**
      * @param string $email
      */
-    public function setEmail($email)
+    public function setEmail($email): void
     {
         $this->email = $email;
     }
@@ -150,20 +145,14 @@ class CitrixEvent
         return $this->eventName;
     }
 
-    /**
-     * @return string
-     */
-    public function getEventNameOnly()
+    public function getEventNameOnly(): string
     {
         $eventName = $this->eventName;
 
         return substr($eventName, 0, strpos($eventName, '_#'));
     }
 
-    /**
-     * @return string
-     */
-    public function getEventId()
+    public function getEventId(): string
     {
         $eventName = $this->eventName;
 
@@ -183,10 +172,7 @@ class CitrixEvent
         return substr($this->eventDesc, 0, $pos);
     }
 
-    /**
-     * @return string
-     */
-    public function getJoinUrl()
+    public function getJoinUrl(): string
     {
         $pos = strpos($this->eventDesc, '_!');
         if (false === $pos) {

@@ -59,7 +59,7 @@ class SyncCommand extends ModeratedCommand
                 }
             }
 
-            if (0 === count($activeProducts)) {
+            if ([] === $activeProducts) {
                 $this->completeRun();
 
                 return;

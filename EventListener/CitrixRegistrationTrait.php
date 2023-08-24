@@ -23,7 +23,7 @@ trait CitrixRegistrationTrait
     public function registerProduct($product, $currentLead, array $productsToRegister)
     {
         $leadFields                         = $currentLead->getProfileFields();
-        list($email, $firstname, $lastname) = [
+        [$email, $firstname, $lastname] = [
             array_key_exists('email', $leadFields) ? $leadFields['email'] : '',
             array_key_exists('firstname', $leadFields) ? $leadFields['firstname'] : '',
             array_key_exists('lastname', $leadFields) ? $leadFields['lastname'] : '',

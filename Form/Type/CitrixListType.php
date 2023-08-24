@@ -16,7 +16,7 @@ class CitrixListType extends AbstractType
     /**
      * {@inheritdoc}
      */
-    public function buildForm(FormBuilderInterface $builder, array $options)
+    public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->add(
             'placeholder',
@@ -32,7 +32,7 @@ class CitrixListType extends AbstractType
         $default = false;
 
         if (!empty($options['parentData'])) {
-            $default = empty($options['parentData']['properties']['multiple']) ? false : true;
+            $default = !empty($options['parentData']['properties']['multiple']);
         }
 
         $builder->add(
@@ -51,7 +51,7 @@ class CitrixListType extends AbstractType
      *
      * @throws \Symfony\Component\OptionsResolver\Exception\AccessException
      */
-    public function configureOptions(OptionsResolver $resolver)
+    public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults(
             [

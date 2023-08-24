@@ -15,7 +15,7 @@ trait CitrixStartTrait
      */
     protected $emailModel;
 
-    public function setEmailModel(EmailModel $emailModel)
+    public function setEmailModel(EmailModel $emailModel): void
     {
         $this->emailModel = $emailModel;
     }
@@ -37,7 +37,7 @@ trait CitrixStartTrait
     public function startProduct($product, $lead, array $productsToStart, $emailId = null, $actionId = null)
     {
         $leadFields                         = $lead->getProfileFields();
-        list($email, $firstname, $lastname) = [
+        [$email, $firstname, $lastname] = [
             array_key_exists('email', $leadFields) ? $leadFields['email'] : '',
             array_key_exists('firstname', $leadFields) ? $leadFields['firstname'] : '',
             array_key_exists('lastname', $leadFields) ? $leadFields['lastname'] : '',

@@ -24,7 +24,7 @@ class CitrixApi
     /**
      * @param string $operation
      * @param string $route
-     * @param bool   $refreshToken
+     * @param bool $refreshToken
      *
      * @return mixed|string
      *
@@ -33,8 +33,8 @@ class CitrixApi
     protected function _request($operation, array $settings, $route = 'rest', $refreshToken = true)
     {
         $requestSettings = [
-            'encode_parameters'   => 'json',
-            'return_raw'          => 'true', // needed to get the HTTP status code in the response
+            'encode_parameters' => 'json',
+            'return_raw' => 'true', // needed to get the HTTP status code in the response
         ];
 
         if (array_key_exists('requestSettings', $settings) && is_array($settings['requestSettings'])) {
@@ -55,7 +55,7 @@ class CitrixApi
             $settings['method'],
             $requestSettings
         );
-        $status  = $request->getStatusCode();
+        $status = $request->getStatusCode();
         $message = '';
 
         // Try refresh access_token with refresh_token (https://goto-developer.logmeininc.com/how-use-refresh-tokens)
@@ -68,14 +68,9 @@ class CitrixApi
         }
 
         switch ($status) {
-            case 200:
-                // request ok
-                break;
-            case 201:
-                // POST ok
-                break;
-            case 204:
-                // PUT/DELETE ok
+            case 200:   // request ok
+            case 201:   // POST ok
+            case 204:   // PUT/DELETE ok
                 break;
             case 400:
                 $message = 'Bad request';
@@ -107,10 +102,6 @@ class CitrixApi
     private function isInvalidTokenFromReponse(ResponseInterface $request)
     {
         $responseData = $this->integration->parseCallbackResponse($request->getBody());
-        if (isset($responseData['int_err_code']) && 'InvalidToken' == $responseData['int_err_code']) {
-            return true;
-        }
-
-        return false;
+        return isset($responseData['int_err_code']) && 'InvalidToken' == $responseData['int_err_code'];
     }
 }

@@ -16,20 +16,8 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 
 class LeadSubscriber implements EventSubscriberInterface
 {
-    /**
-     * @var CitrixModel
-     */
-    private $model;
-
-    /**
-     * @var TranslatorInterface
-     */
-    private $translator;
-
-    public function __construct(CitrixModel $model, TranslatorInterface $translator)
+    public function __construct(private CitrixModel $model, private TranslatorInterface $translator)
     {
-        $this->model      = $model;
-        $this->translator = $translator;
     }
 
     /**
@@ -49,7 +37,7 @@ class LeadSubscriber implements EventSubscriberInterface
      * @throws \Symfony\Component\DependencyInjection\Exception\ServiceCircularReferenceException
      * @throws \Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException
      */
-    public function onTimelineGenerate(LeadTimelineEvent $event)
+    public function onTimelineGenerate(LeadTimelineEvent $event): void
     {
         $activeProducts = [];
         foreach (CitrixProducts::toArray() as $p) {
@@ -57,7 +45,7 @@ class LeadSubscriber implements EventSubscriberInterface
                 $activeProducts[] = $p;
             }
         }
-        if (0 === count($activeProducts)) {
+        if ([] === $activeProducts) {
             return;
         }
 
@@ -81,36 +69,33 @@ class LeadSubscriber implements EventSubscriberInterface
                 // Add total number to counter
                 $event->addToCounter($eventType, $citrixEvents);
 
-                if (!$event->isEngagementCount()) {
-                    if ($citrixEvents['total']) {
-                        // Use a single entity class to help parse the name, description, etc without hydrating entities for every single event
-                        $entity = new CitrixEvent();
+                if (!$event->isEngagementCount() && $citrixEvents['total']) {
+                    // Use a single entity class to help parse the name, description, etc without hydrating entities for every single event
+                    $entity = new CitrixEvent();
+                    foreach ($citrixEvents['results'] as $citrixEvent) {
+                        $entity->setProduct($citrixEvent['product'])
+                            ->setEventName($citrixEvent['event_name'])
+                            ->setEventDesc($citrixEvent['event_desc'])
+                            ->setEventType($citrixEvent['event_type'])
+                            ->setEventDate($citrixEvent['event_date']);
 
-                        foreach ($citrixEvents['results'] as $citrixEvent) {
-                            $entity->setProduct($citrixEvent['product'])
-                                ->setEventName($citrixEvent['event_name'])
-                                ->setEventDesc($citrixEvent['event_desc'])
-                                ->setEventType($citrixEvent['event_type'])
-                                ->setEventDate($citrixEvent['event_date']);
-
-                            $event->addEvent(
-                                [
-                                    'event'      => $eventType,
-                                    'eventId'    => $eventType.$citrixEvent['id'],
-                                    'eventLabel' => $eventTypeName.' - '.$entity->getEventDesc(),
-                                    'eventType'  => $eventTypeLabel,
-                                    'timestamp'  => $entity->getEventDate(),
-                                    'extra'      => [
-                                        'eventName' => $entity->getEventNameOnly(),
-                                        'eventId'   => $entity->getEventId(),
-                                        'eventDesc' => $entity->getEventDesc(),
-                                        'joinUrl'   => $entity->getJoinUrl(),
-                                    ],
-                                    'contentTemplate' => 'MauticCitrixBundle:SubscribedEvents\Timeline:citrix_event.html.php',
-                                    'contactId'       => $citrixEvent['lead_id'],
-                                ]
-                            );
-                        }
+                        $event->addEvent(
+                            [
+                                'event'      => $eventType,
+                                'eventId'    => $eventType.$citrixEvent['id'],
+                                'eventLabel' => $eventTypeName.' - '.$entity->getEventDesc(),
+                                'eventType'  => $eventTypeLabel,
+                                'timestamp'  => $entity->getEventDate(),
+                                'extra'      => [
+                                    'eventName' => $entity->getEventNameOnly(),
+                                    'eventId'   => $entity->getEventId(),
+                                    'eventDesc' => $entity->getEventDesc(),
+                                    'joinUrl'   => $entity->getJoinUrl(),
+                                ],
+                                'contentTemplate' => 'MauticCitrixBundle:SubscribedEvents\Timeline:citrix_event.html.php',
+                                'contactId'       => $citrixEvent['lead_id'],
+                            ]
+                        );
                     }
                 }
             }
@@ -122,9 +107,9 @@ class LeadSubscriber implements EventSubscriberInterface
      * @throws \Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException
      * @throws \InvalidArgumentException
      */
-    public function onListChoicesGenerate(LeadListFiltersChoicesEvent $event)
+    public function onListChoicesGenerate(LeadListFiltersChoicesEvent $event): void
     {
-        if (false === strpos($event->getRoute(), 'mautic_segment_action')) {
+        if (!str_contains($event->getRoute(), 'mautic_segment_action')) {
             return;
         }
 
@@ -134,7 +119,7 @@ class LeadSubscriber implements EventSubscriberInterface
                 $activeProducts[] = $p;
             }
         }
-        if (0 === count($activeProducts)) {
+        if ([] === $activeProducts) {
             return;
         }
 
@@ -207,7 +192,7 @@ class LeadSubscriber implements EventSubscriberInterface
         } // foreach $product
     }
 
-    public function onListFiltering(LeadListFilteringEvent $event)
+    public function onListFiltering(LeadListFilteringEvent $event): void
     {
         $activeProducts = [];
         foreach (CitrixProducts::toArray() as $p) {
@@ -215,7 +200,7 @@ class LeadSubscriber implements EventSubscriberInterface
                 $activeProducts[] = $p;
             }
         }
-        if (0 === count($activeProducts)) {
+        if ([] === $activeProducts) {
             return;
         }
 
@@ -239,9 +224,7 @@ class LeadSubscriber implements EventSubscriberInterface
                     $eventNames = [$eventNames];
                 }
                 $isAnyEvent = in_array('any', $eventNames, true);
-                $eventNames = array_map(function ($v) use ($q) {
-                    return $q->expr()->literal($v);
-                }, $eventNames);
+                $eventNames = array_map(fn($v) => $q->expr()->literal($v), $eventNames);
                 $subQueriesSQL = [];
 
                 $eventTypes = [CitrixEventTypes::REGISTERED, CitrixEventTypes::ATTENDED];

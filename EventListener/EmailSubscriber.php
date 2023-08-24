@@ -2,7 +2,6 @@
 
 namespace MauticPlugin\MauticCitrixBundle\EventListener;
 
-use Mautic\CoreBundle\Helper\TemplatingHelper;
 use Mautic\EmailBundle\EmailEvents;
 use Mautic\EmailBundle\Event\EmailBuilderEvent;
 use Mautic\EmailBundle\Event\EmailSendEvent;
@@ -15,39 +14,16 @@ use MauticPlugin\MauticCitrixBundle\Model\CitrixModel;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
+use Twig\Environment;
 
 class EmailSubscriber implements EventSubscriberInterface
 {
-    /**
-     * @var CitrixModel
-     */
-    private $citrixModel;
-
-    /**
-     * @var TranslatorInterface
-     */
-    private $translator;
-
-    /**
-     * @var EventDispatcherInterface
-     */
-    private $dispatcher;
-
-    /**
-     * @var TemplatingHelper
-     */
-    private $templating;
-
     public function __construct(
-        CitrixModel $citrixModel,
-        TranslatorInterface $translator,
-        EventDispatcherInterface $dispatcher,
-        TemplatingHelper $templating
+        private CitrixModel $citrixModel,
+        private TranslatorInterface $translator,
+        private EventDispatcherInterface $dispatcher,
+        private Environment $templating
     ) {
-        $this->citrixModel = $citrixModel;
-        $this->translator  = $translator;
-        $this->dispatcher  = $dispatcher;
-        $this->templating  = $templating;
     }
 
     /**
@@ -67,7 +43,7 @@ class EmailSubscriber implements EventSubscriberInterface
      * @throws \InvalidArgumentException
      * @throws \RuntimeException
      */
-    public function onTokenGenerate(TokenGenerateEvent $event)
+    public function onTokenGenerate(TokenGenerateEvent $event): void
     {
         // inject product details in $event->params on email send
         if ('webinar' == $event->getProduct()) {
@@ -82,7 +58,7 @@ class EmailSubscriber implements EventSubscriberInterface
                         'eventType' => 'registered',
                         'email'     => $email,
                     ], ['eventDate' => 'DESC'], 1);
-                if (0 !== count($result)) {
+                if ([] !== $result) {
                     /** @var CitrixEvent $ce */
                     $ce = $result[0];
                     $event->setProductLink($ce->getJoinUrl());
@@ -98,7 +74,7 @@ class EmailSubscriber implements EventSubscriberInterface
      * @throws \InvalidArgumentException
      * @throws \RuntimeException
      */
-    public function onEmailBuild(EmailBuilderEvent $event)
+    public function onEmailBuild(EmailBuilderEvent $event): void
     {
         // register tokens only if the plugins are enabled
         $tokens         = [];
@@ -112,7 +88,7 @@ class EmailSubscriber implements EventSubscriberInterface
                 }
             }
         }
-        if (0 === count($activeProducts)) {
+        if ([] === $activeProducts) {
             return;
         }
 
@@ -129,7 +105,7 @@ class EmailSubscriber implements EventSubscriberInterface
      *
      * @throws \RuntimeException
      */
-    public function decodeTokensDisplay(EmailSendEvent $event)
+    public function decodeTokensDisplay(EmailSendEvent $event): void
     {
         $this->decodeTokens($event, false);
     }
@@ -139,7 +115,7 @@ class EmailSubscriber implements EventSubscriberInterface
      *
      * @throws \RuntimeException
      */
-    public function decodeTokensSend(EmailSendEvent $event)
+    public function decodeTokensSend(EmailSendEvent $event): void
     {
         $this->decodeTokens($event, true);
     }
@@ -151,7 +127,7 @@ class EmailSubscriber implements EventSubscriberInterface
      *
      * @throws \RuntimeException
      */
-    public function decodeTokens(EmailSendEvent $event, $triggerEvent = false)
+    public function decodeTokens(EmailSendEvent $event, $triggerEvent = false): void
     {
         $products = [
             CitrixProducts::GOTOMEETING,

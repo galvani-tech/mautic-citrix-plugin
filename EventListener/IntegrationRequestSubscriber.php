@@ -24,9 +24,9 @@ class IntegrationRequestSubscriber implements EventSubscriberInterface
     /**
      * @throws \Exception
      */
-    public function getParameters(PluginIntegrationRequestEvent $requestEvent)
+    public function getParameters(PluginIntegrationRequestEvent $requestEvent): void
     {
-        if (false !== strpos($requestEvent->getUrl(), 'oauth/v2/token')) {
+        if (str_contains($requestEvent->getUrl(), 'oauth/v2/token')) {
             $authorization = $this->getAuthorization($requestEvent->getParameters());
             $requestEvent->setHeaders([
                 'Authorization' => sprintf('Basic %s', base64_encode($authorization)),
@@ -36,11 +36,9 @@ class IntegrationRequestSubscriber implements EventSubscriberInterface
     }
 
     /**
-     * @return string
-     *
      * @throws \Exception
      */
-    private function getAuthorization(array $parameters)
+    private function getAuthorization(array $parameters): string
     {
         if (empty($parameters['client_id'])) {
             throw new \Exception('No client ID given.');

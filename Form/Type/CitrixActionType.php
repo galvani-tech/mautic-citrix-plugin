@@ -38,7 +38,7 @@ class CitrixActionType extends AbstractType
      * @throws \Symfony\Component\Validator\Exception\InvalidOptionsException
      * @throws \Symfony\Component\Validator\Exception\MissingOptionsException
      */
-    public function buildForm(FormBuilderInterface $builder, array $options)
+    public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         if (!(array_key_exists('attr', $options) && array_key_exists('data-product', $options['attr'])) ||
             !CitrixProducts::isValidValue($options['attr']['data-product']) ||
@@ -59,9 +59,7 @@ class CitrixActionType extends AbstractType
                 array_merge(
                     ['button', 'freetext', 'captcha'],
                     array_map(
-                        function ($p) {
-                            return 'plugin.citrix.select.'.$p;
-                        },
+                        fn($p): string => 'plugin.citrix.select.'.$p,
                         CitrixProducts::toArray()
                     )
                 ),

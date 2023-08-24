@@ -4,86 +4,54 @@ namespace MauticPlugin\MauticCitrixBundle\Event;
 
 use Mautic\CoreBundle\Event\CommonEvent;
 
-/**
- * Class TokenGenerateEvent.
- */
 class TokenGenerateEvent extends CommonEvent
 {
-    /**
-     * @var array
-     */
-    private $params = [];
-
-    /**
-     * TokenGenerateEvent constructor.
-     */
-    public function __construct(array $params)
+    public function __construct(private array $params)
     {
-        $this->params = $params;
     }
 
     /**
-     * Returns the params array.
-     *
-     * @return array
+     * @return array<string>
      */
-    public function getParams()
+    public function getParams(): array
     {
         return $this->params;
     }
 
     /**
-     * @param array $params
+     * @param array<string> $params
      */
-    protected function setParams($params)
+    protected function setParams(array $params): void
     {
         $this->params = $params;
     }
 
-    /**
-     * @return string
-     */
-    public function getProduct()
+    public function getProduct(): string
     {
         return array_key_exists('product', $this->params) ? $this->params['product'] : '';
     }
 
-    /**
-     * @param string $product
-     */
-    public function setProduct($product)
+    public function setProduct(string $product): void
     {
         $this->params['product'] = $product;
     }
 
-    /**
-     * @return string
-     */
-    public function getProductLink()
+    public function getProductLink(): string
     {
         return array_key_exists('productLink', $this->params) ? $this->params['productLink'] : '';
     }
 
-    /**
-     * @param string $productLink
-     */
-    public function setProductLink($productLink)
+    public function setProductLink($productLink): void
     {
         $this->params['productLink'] = $productLink;
     }
 
-    /**
-     * @return string
-     */
-    public function getProductText()
+    public function getProductText(): string
     {
         return array_key_exists('productText', $this->params) ? $this->params['productText'] : '';
     }
 
-    /**
-     * @param string $productText
-     */
-    public function setProductText($productText)
+    public function setProductText(string $productText): void
     {
         $this->params['productText'] = $productText;
     }

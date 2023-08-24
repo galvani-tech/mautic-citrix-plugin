@@ -41,7 +41,7 @@ class CitrixCampaignEventType extends AbstractType
      * @throws \Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException
      * @throws \InvalidArgumentException
      */
-    public function buildForm(FormBuilderInterface $builder, array $options)
+    public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         if (!(array_key_exists('attr', $options) && array_key_exists('data-product', $options['attr']))
             || !CitrixProducts::isValidValue($options['attr']['data-product'])

@@ -15,10 +15,8 @@ class CitrixEventRepository extends CommonRepository
      *
      * @param string    $product
      * @param string    $eventType
-     * @param \DateTime $fromDate
      *
      * @return mixed
-     *
      * @throws \InvalidArgumentException
      */
     public function getEvents($product, $eventType, \DateTime $fromDate = null)
@@ -30,7 +28,7 @@ class CitrixEventRepository extends CommonRepository
             $q->expr()->eq('c.event_type', ':eventType')
         );
 
-        if ($fromDate) {
+        if ($fromDate instanceof \DateTime) {
             $expr->add(
                 $q->expr()->gte('c.event_date', ':fromDate')
             );
@@ -54,7 +52,7 @@ class CitrixEventRepository extends CommonRepository
     {
         $eventType = null;
         if (is_array($product)) {
-            list($product, $eventType) = $product;
+            [$product, $eventType] = $product;
         }
 
         $query = $this->getEntityManager()->getConnection()->createQueryBuilder()
@@ -164,10 +162,8 @@ class CitrixEventRepository extends CommonRepository
 
     /**
      * {@inheritdoc}
-     *
-     * @return string
      */
-    public function getTableAlias()
+    public function getTableAlias(): string
     {
         return 'c';
     }
