@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace MauticPlugin\MauticCitrixBundle\Integration;
 
-/**
- * Class HubspotIntegration.
- */
 class GotowebinarIntegration extends CitrixAbstractIntegration
 {
     /**

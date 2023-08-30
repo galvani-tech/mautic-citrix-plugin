@@ -25,6 +25,7 @@ use MauticPlugin\MauticCitrixBundle\Form\Type\CitrixActionType;
 use MauticPlugin\MauticCitrixBundle\Form\Type\CitrixListType;
 use MauticPlugin\MauticCitrixBundle\Helper\CitrixHelper;
 use MauticPlugin\MauticCitrixBundle\Helper\CitrixProducts;
+use MauticPlugin\MauticCitrixBundle\Helper\CitrixServiceHelper;
 use MauticPlugin\MauticCitrixBundle\Model\CitrixModel;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -43,7 +44,8 @@ class FormSubscriber implements EventSubscriberInterface
         private SubmissionModel $submissionModel,
         private TranslatorInterface $translator,
         private EntityManager $entityManager,
-        private Environment $templating
+        private Environment $templating,
+        private CitrixServiceHelper $citrixServiceHelper,
     ) {
     }
 
@@ -455,11 +457,10 @@ class FormSubscriber implements EventSubscriberInterface
      */
     public function onFormBuilder(Events\FormBuilderEvent $event): void
     {
-        $activeProducts = array_filter(CitrixProducts::toArray(), fn ($product) => CitrixHelper::isAuthorized('Goto'.$product));
-
-        if ([] === $activeProducts) {
-            return;
-        }
+        $activeProducts = array_filter(
+            CitrixProducts::toArray(),
+            fn ($product) => $this->citrixServiceHelper->isIntegrationAuthorized('Goto'.$product)
+        );
 
         foreach ($activeProducts as $product) {
             $event->addFormField('plugin.citrix.select.'.$product, [

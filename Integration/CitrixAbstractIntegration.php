@@ -4,41 +4,105 @@ declare(strict_types=1);
 
 namespace MauticPlugin\MauticCitrixBundle\Integration;
 
-use Mautic\PluginBundle\Entity\Integration;
-use Mautic\PluginBundle\Integration\AbstractIntegration;
+use Mautic\IntegrationsBundle\Auth\Provider\AuthConfigInterface;
+use Mautic\IntegrationsBundle\Auth\Provider\Oauth1aThreeLegged\CredentialsInterface;
+use Mautic\IntegrationsBundle\Helper\IntegrationsHelper;
+use Mautic\IntegrationsBundle\Integration\BasicIntegration;
+use Mautic\IntegrationsBundle\Integration\DefaultConfigFormTrait;
+use Mautic\IntegrationsBundle\Integration\Interfaces\ConfigFormAuthInterface;
+use Mautic\IntegrationsBundle\Integration\Interfaces\ConfigFormAuthorizeButtonInterface;
+use Mautic\IntegrationsBundle\Integration\Interfaces\IntegrationInterface;
+use MauticPlugin\MauticCitrixBundle\Form\Type\ConfigAuthType;
 
 /**
  * Class CitrixAbstractIntegration.
  */
-abstract class CitrixAbstractIntegration extends AbstractIntegration
+abstract class CitrixAbstractIntegration extends BasicIntegration implements IntegrationInterface, ConfigFormAuthInterface, ConfigFormAuthorizeButtonInterface, CredentialsInterface
 {
-    protected $auth;
+    use DefaultConfigFormTrait;
 
-    /**
-     * @return array
-     */
-    public function getSupportedFeatures()
+    /** @var array<string> */
+    protected array $apiKeys = [];
+
+    protected ?IntegrationCredentials $credentials = null;
+    public function getRequestTokenUrl() : string{
+        return 'aaa';
+ // TODO: Implement getRequestTokenUrl() method.
+}
+public function getAuthCallbackUrl() : ?string{
+ // TODO: Implement getAuthCallbackUrl() method.
+    return 'aaa';
+}
+public function getConsumerId() : ?string{
+ // TODO: Implement getConsumerId() method.
+    return 'aaa';
+}
+public function getConsumerSecret() : ?string{
+ // TODO: Implement getConsumerSecret() method.
+    return 'aaa';
+}
+public function getAccessToken() : ?string{
+ // TODO: Implement getAccessToken() method.
+    return 'aaa';
+}
+public function getRequestToken() : ?string{
+ // TODO: Implement getRequestToken() method.
+    return 'aaa';
+}
+
+
+
+
+    public function getApiKeys(): array
     {
-        return [];
+        return $this->apiKeys;
     }
 
-    public function setIntegrationSettings(Integration $settings): void
+
+    public function getCredentials(): ?IntegrationCredentials
     {
-        // make sure URL does not have ending /
-        $keys = $this->getDecryptedApiKeys($settings);
-        if (array_key_exists('url', $keys) && str_ends_with($keys['url'], '/')) {
-            $keys['url'] = substr($keys['url'], 0, -1);
-            $this->encryptAndSetApiKeys($keys, $settings);
+        if (null === $this->credentials) {
+            $this->credentials = new IntegrationCredentials(...$this->integrationsHelper->getIntegrationConfiguration($this)->getApiKeys());
         }
 
-        parent::setIntegrationSettings($settings);
+        return $this->credentials;
     }
 
-    /**
-     * {@inheritdoc}
-     *
-     * @return string
-     */
+
+    public function isAuthorized(): bool
+    {
+        $credentials = $this->getCredentials();
+        false;
+        // TODO: Implement isAuthorized() method.
+    }
+
+    public function getAuthorizationUrl(): string
+    {
+        // TODO: Implement getAuthorizationUrl() method.
+        return 'http://localhost:8888/mautic/s/plugins/MauticCitrixBundle/auth';
+    }
+
+
+    public function __construct(private IntegrationsHelper $integrationsHelper)
+    {
+
+    }
+
+    public function getIcon(): string
+    {
+        return 'plugins/MauticEpathBundle/Assets/img/epath_logo.png';
+    }
+
+    public function getAuthConfigFormName(): string
+    {
+        return ConfigAuthType::class;
+    }
+
+
+//    public function setIntegrationConfiguration(Integration $integration) : void{
+//        $this->credentials = new IntegrationCredentials(...$this->integrationsHelper->getIntegrationConfiguration($this)->getApiKeys());
+//    }
+
     public function getAuthenticationType()
     {
         return 'oauth2';
@@ -49,11 +113,11 @@ abstract class CitrixAbstractIntegration extends AbstractIntegration
      *
      * @return array
      */
-    public function getRequiredKeyFields()
+    public function getRequiredKeyFields(): array
     {
         return [
-            'app_name'      => 'mautic.citrix.form.appname',
-            'client_id'     => 'mautic.citrix.form.clientid',
+            'app_name' => 'mautic.citrix.form.appname',
+            'client_id' => 'mautic.citrix.form.clientid',
             'client_secret' => 'mautic.citrix.form.clientsecret',
         ];
     }
@@ -75,7 +139,7 @@ abstract class CitrixAbstractIntegration extends AbstractIntegration
     {
         static $helper;
         if (null === $helper) {
-            $class  = '\\MauticPlugin\\MauticCitrixBundle\\Api\\'.$this->getName().'Api';
+            $class = '\\MauticPlugin\\MauticCitrixBundle\\Api\\' . $this->getName() . 'Api';
             $helper = new $class($this);
         }
 
@@ -95,9 +159,9 @@ abstract class CitrixAbstractIntegration extends AbstractIntegration
      *
      * @return string
      */
-    public function getAccessTokenUrl()
+    public function getAccessTokenUrl(): string
     {
-        return $this->getApiUrl().'/oauth/v2/token';
+        return $this->getApiUrl() . '/oauth/v2/token';
     }
 
     /**
@@ -107,13 +171,13 @@ abstract class CitrixAbstractIntegration extends AbstractIntegration
      */
     public function getAuthenticationUrl()
     {
-        return $this->getApiUrl().'/oauth/v2/authorize';
+        return $this->getApiUrl() . '/oauth/v2/authorize';
     }
 
     /**
      * @return string
      */
-    public function getApiKey()
+    public function getApiKey(): string
     {
         $keys = $this->getKeys();
 

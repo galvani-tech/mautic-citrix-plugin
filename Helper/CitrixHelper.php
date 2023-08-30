@@ -222,6 +222,7 @@ class CitrixHelper
      */
     private static function getIntegration($integration)
     {
+        throw new \Exception('Deprecated');
         try {
             return self::$integrationHelper->getIntegrationObject($integration);
         } catch (\Exception) {
