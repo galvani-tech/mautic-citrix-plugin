@@ -117,22 +117,22 @@ return [
         'integrations' => [
             'mautic.integration.gotomeeting' => [
                 'class' => \MauticPlugin\MauticCitrixBundle\Integration\GotomeetingIntegration::class,
-                'arguments' => [ 'mautic.integrations.helper' ],
-                'tags' => ['mautic.integration', 'mautic.basic_integration'],
+                'arguments' => [ 'mautic.integrations.helper', 'router' ],
+                'tags' => ['mautic.integration', 'mautic.basic_integration', 'mautic.authentication_integration'],
             ],
             'mautic.integration.gotoassistant' => [
                 'class' => \MauticPlugin\MauticCitrixBundle\Integration\GotoassistIntegration::class,
-                'arguments' => [ 'mautic.integrations.helper' ],
+                'arguments' => [ 'mautic.integrations.helper', 'router' ],
                 'tags' => ['mautic.integration', 'mautic.basic_integration'],
             ],
             'mautic.integration.gototraining' => [
                 'class' => \MauticPlugin\MauticCitrixBundle\Integration\GototrainingIntegration::class,
-                'arguments' => [ 'mautic.integrations.helper' ],
+                'arguments' => [ 'mautic.integrations.helper', 'router' ],
                 'tags' => ['mautic.integration', 'mautic.basic_integration'],
             ],
             'mautic.integration.gotomeeting.configuration' => [
                 'class' => \MauticPlugin\MauticCitrixBundle\Integration\Support\GotomeetingConfigSupport::class,
-                'arguments' => [ 'mautic.integrations.helper' ],
+                'arguments' => [ 'mautic.integrations.helper', 'router' ],
                 'tags' => [
                     'mautic.config_integration',
                 ],

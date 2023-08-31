@@ -4,8 +4,8 @@ namespace MauticPlugin\MauticCitrixBundle\Form\Type;
 
 use Mautic\IntegrationsBundle\Form\Type\Auth\Oauth1aTwoLeggedKeysTrait;
 use Mautic\IntegrationsBundle\Form\Type\NotBlankIfPublishedConstraintTrait;
-use Mautic\PluginBundle\Entity\Integration;
 use MauticPlugin\MauticCitrixBundle\Integration\CitrixAbstractIntegration;
+use MauticPlugin\MauticCitrixBundle\Integration\Support\GotomeetingConfigSupport;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -14,7 +14,7 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class ConfigAuthType extends AbstractType
 {
-    //use Oauth1aTwoLeggedKeysTrait;
+    use Oauth1aTwoLeggedKeysTrait;
     use NotBlankIfPublishedConstraintTrait;
 
     public function __construct() {
@@ -34,6 +34,9 @@ class ConfigAuthType extends AbstractType
      */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
+        /** @var GotomeetingConfigSupport $integration */
+        $integration = $options['integration'];
+        $accessKey = $integration->getCredentials()->getClientSecret();
         $builder->add(
             'app_name',
             TextType::class,
@@ -72,6 +75,7 @@ class ConfigAuthType extends AbstractType
                     'class'    => 'form-control',
                 ],
                 'required'    => false,
+                'empty_data'  => $accessKey,
             ]
         );
     }

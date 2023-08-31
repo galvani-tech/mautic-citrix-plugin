@@ -5,19 +5,24 @@ declare(strict_types=1);
 namespace MauticPlugin\MauticCitrixBundle\Integration;
 
 use Mautic\IntegrationsBundle\Auth\Provider\AuthConfigInterface;
+use Mautic\IntegrationsBundle\Auth\Provider\AuthCredentialsInterface;
 use Mautic\IntegrationsBundle\Auth\Provider\Oauth1aThreeLegged\CredentialsInterface;
+use Mautic\IntegrationsBundle\Auth\Provider\Oauth2ThreeLegged\Credentials\RedirectUriInterface;
 use Mautic\IntegrationsBundle\Helper\IntegrationsHelper;
 use Mautic\IntegrationsBundle\Integration\BasicIntegration;
 use Mautic\IntegrationsBundle\Integration\DefaultConfigFormTrait;
 use Mautic\IntegrationsBundle\Integration\Interfaces\ConfigFormAuthInterface;
 use Mautic\IntegrationsBundle\Integration\Interfaces\ConfigFormAuthorizeButtonInterface;
+use Mautic\IntegrationsBundle\Integration\Interfaces\ConfigFormCallbackInterface;
 use Mautic\IntegrationsBundle\Integration\Interfaces\IntegrationInterface;
 use MauticPlugin\MauticCitrixBundle\Form\Type\ConfigAuthType;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Routing\RouterInterface;
 
 /**
  * Class CitrixAbstractIntegration.
  */
-abstract class CitrixAbstractIntegration extends BasicIntegration implements IntegrationInterface, ConfigFormAuthInterface, ConfigFormAuthorizeButtonInterface, CredentialsInterface
+abstract class CitrixAbstractIntegration extends BasicIntegration implements IntegrationInterface, ConfigFormAuthInterface, ConfigFormAuthorizeButtonInterface, CredentialsInterface, RedirectUriInterface, ConfigFormCallbackInterface
 {
     use DefaultConfigFormTrait;
 
@@ -25,6 +30,27 @@ abstract class CitrixAbstractIntegration extends BasicIntegration implements Int
     protected array $apiKeys = [];
 
     protected ?IntegrationCredentials $credentials = null;
+
+    public function __construct(private IntegrationsHelper $integrationsHelper, private RouterInterface $router)
+    {
+
+    }
+
+    // @TODO move to trait ori AbstractConfigSupport to create
+    public function getRedirectUri() : string{
+        return $this->router->generate('mautic_integration_auth_callback', ['integration' => $this->getName()], UrlGeneratorInterface::ABSOLUTE_URL);
+ // TODO: Implement getRedirectUri() method.
+}
+
+    public function getCallbackHelpMessageTranslationKey(): string
+    {
+        return 'mautic.citrix.config.form.callback.help';
+    }
+
+
+
+
+
     public function getRequestTokenUrl() : string{
         return 'aaa';
  // TODO: Implement getRequestTokenUrl() method.
@@ -71,6 +97,7 @@ public function getRequestToken() : ?string{
 
     public function isAuthorized(): bool
     {
+        return false;
         $credentials = $this->getCredentials();
         false;
         // TODO: Implement isAuthorized() method.
@@ -78,14 +105,7 @@ public function getRequestToken() : ?string{
 
     public function getAuthorizationUrl(): string
     {
-        // TODO: Implement getAuthorizationUrl() method.
-        return 'http://localhost:8888/mautic/s/plugins/MauticCitrixBundle/auth';
-    }
-
-
-    public function __construct(private IntegrationsHelper $integrationsHelper)
-    {
-
+        return $this->getApiUrl() . '/oauth/v2/authorize';
     }
 
     public function getIcon(): string
@@ -103,24 +123,20 @@ public function getRequestToken() : ?string{
 //        $this->credentials = new IntegrationCredentials(...$this->integrationsHelper->getIntegrationConfiguration($this)->getApiKeys());
 //    }
 
-    public function getAuthenticationType()
-    {
-        return 'oauth2';
-    }
 
-    /**
-     * {@inheritdoc}
-     *
-     * @return array
-     */
-    public function getRequiredKeyFields(): array
-    {
-        return [
-            'app_name' => 'mautic.citrix.form.appname',
-            'client_id' => 'mautic.citrix.form.clientid',
-            'client_secret' => 'mautic.citrix.form.clientsecret',
-        ];
-    }
+//    /**
+//     * {@inheritdoc}
+//     *
+//     * @return array
+//     */
+//    public function getRequiredKeyFields(): array
+//    {
+//        return [
+//            'app_name' => 'mautic.citrix.form.appname',
+//            'client_id' => 'mautic.citrix.form.clientid',
+//            'client_secret' => 'mautic.citrix.form.clientsecret',
+//        ];
+//    }
 
     /**
      * {@inheritdoc}
@@ -162,16 +178,6 @@ public function getRequestToken() : ?string{
     public function getAccessTokenUrl(): string
     {
         return $this->getApiUrl() . '/oauth/v2/token';
-    }
-
-    /**
-     * {@inheritdoc}
-     *
-     * @return string
-     */
-    public function getAuthenticationUrl()
-    {
-        return $this->getApiUrl() . '/oauth/v2/authorize';
     }
 
     /**
