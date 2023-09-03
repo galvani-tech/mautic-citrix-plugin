@@ -14,4 +14,5 @@ use MauticPlugin\MauticCitrixBundle\Integration\GotomeetingIntegration;
 
 class GotomeetingConfigSupport extends GotomeetingIntegration implements ConfigFormInterface, ConfigFormFeaturesInterface, ConfigFormAuthInterface
 {
+
 }

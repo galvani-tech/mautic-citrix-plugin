@@ -4,113 +4,157 @@ declare(strict_types=1);
 
 namespace MauticPlugin\MauticCitrixBundle\Integration;
 
-use Mautic\IntegrationsBundle\Auth\Provider\AuthConfigInterface;
-use Mautic\IntegrationsBundle\Auth\Provider\AuthCredentialsInterface;
-use Mautic\IntegrationsBundle\Auth\Provider\Oauth1aThreeLegged\CredentialsInterface;
+use kamermans\OAuth2\Persistence\TokenPersistenceInterface as KamermansTokenPersistenceInterface;
+use Mautic\IntegrationsBundle\Auth\Provider\AuthProviderInterface;
 use Mautic\IntegrationsBundle\Auth\Provider\Oauth2ThreeLegged\Credentials\RedirectUriInterface;
+use Mautic\IntegrationsBundle\Auth\Support\Oauth2\ConfigAccess\ConfigTokenPersistenceInterface;
 use Mautic\IntegrationsBundle\Helper\IntegrationsHelper;
 use Mautic\IntegrationsBundle\Integration\BasicIntegration;
 use Mautic\IntegrationsBundle\Integration\DefaultConfigFormTrait;
 use Mautic\IntegrationsBundle\Integration\Interfaces\ConfigFormAuthInterface;
 use Mautic\IntegrationsBundle\Integration\Interfaces\ConfigFormAuthorizeButtonInterface;
 use Mautic\IntegrationsBundle\Integration\Interfaces\ConfigFormCallbackInterface;
-use Mautic\IntegrationsBundle\Integration\Interfaces\IntegrationInterface;
+use Mautic\IntegrationsBundle\Integration\Interfaces\ConfigFormInterface;
 use MauticPlugin\MauticCitrixBundle\Form\Type\ConfigAuthType;
+use MauticPlugin\MauticCitrixBundle\Integration\Credentials\Persistance\IntegrationOauthTokenPersistence;
+use MauticPlugin\MauticCitrixBundle\Integration\Traits\OauthAuthentication;
+use Symfony\Component\EventDispatcher\EventDispatcher;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\RouterInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * Class CitrixAbstractIntegration.
  */
-abstract class CitrixAbstractIntegration extends BasicIntegration implements IntegrationInterface, ConfigFormAuthInterface, ConfigFormAuthorizeButtonInterface, CredentialsInterface, RedirectUriInterface, ConfigFormCallbackInterface
+abstract class CitrixAbstractIntegration extends BasicIntegration
+    implements
+        ConfigFormInterface,
+        ConfigFormAuthInterface,
+        ConfigFormAuthorizeButtonInterface,
+        RedirectUriInterface,
+        ConfigFormCallbackInterface,
+        ConfigTokenPersistenceInterface
 {
-    use DefaultConfigFormTrait;
+    use DefaultConfigFormTrait, OauthAuthentication, IntegrationOauthTokenPersistence;
 
-    /** @var array<string> */
-    protected array $apiKeys = [];
-
-    protected ?IntegrationCredentials $credentials = null;
-
-    public function __construct(private IntegrationsHelper $integrationsHelper, private RouterInterface $router)
+    public function __construct(
+        private IntegrationsHelper    $integrationsHelper,
+        private RouterInterface       $router,
+        private EventDispatcher       $dispatcher,
+        private TranslatorInterface   $translator,
+        private RequestStack          $requestStack,
+        private AuthProviderInterface $httpFactory,
+    )
     {
+    }
 
+    public function getRequestStack(): RequestStack
+    {
+        return $this->requestStack;
+    }
+
+    public function getApiKeys(): array
+    {
+        return $this->integrationsHelper->getIntegrationConfiguration($this)->getApiKeys();
+    }
+
+    public function setApiKeys(array $keys): void
+    {
+        $this->integrationsHelper->getIntegrationConfiguration($this)->setApiKeys($keys);
     }
 
     // @TODO move to trait ori AbstractConfigSupport to create
-    public function getRedirectUri() : string{
+    public function getRedirectUri(): string
+    {
         return $this->router->generate('mautic_integration_auth_callback', ['integration' => $this->getName()], UrlGeneratorInterface::ABSOLUTE_URL);
- // TODO: Implement getRedirectUri() method.
-}
+        // TODO: Implement getRedirectUri() method.
+    }
 
     public function getCallbackHelpMessageTranslationKey(): string
     {
         return 'mautic.citrix.config.form.callback.help';
     }
 
-
-
-
-
-    public function getRequestTokenUrl() : string{
-        return 'aaa';
- // TODO: Implement getRequestTokenUrl() method.
-}
-public function getAuthCallbackUrl() : ?string{
- // TODO: Implement getAuthCallbackUrl() method.
-    return 'aaa';
-}
-public function getConsumerId() : ?string{
- // TODO: Implement getConsumerId() method.
-    return 'aaa';
-}
-public function getConsumerSecret() : ?string{
- // TODO: Implement getConsumerSecret() method.
-    return 'aaa';
-}
-public function getAccessToken() : ?string{
- // TODO: Implement getAccessToken() method.
-    return 'aaa';
-}
-public function getRequestToken() : ?string{
- // TODO: Implement getRequestToken() method.
-    return 'aaa';
-}
-
-
-
-
-    public function getApiKeys(): array
+    // TODO get rid of
+    public function getClientIdKey(): string
     {
-        return $this->apiKeys;
+        return 'client_id';
+    }
+
+    public function getClientSecretKey(): string
+    {
+        return 'client_secret';
+
+    }
+
+    public function getAuthTokenKey(): string
+    {
+        return 'access_token';
+    }
+
+    public function getRequestTokenUrl(): string
+    {
+        return $this->getApiUrl() . '/oauth/token';
+    }
+
+    public function getAuthenticationType(): string
+    {
+        return 'oauth2';
+    }
+
+    public function getRouter(): RouterInterface
+    {
+        return $this->router;
+    }
+
+    public function getTranslator(): TranslatorInterface
+    {
+        return $this->translator;
+    }
+
+    public function getDispatcher(): EventDispatcher
+    {
+        return $this->dispatcher;
+    }
+
+    public function getAuthenticationUrl(): string
+    {
+        return $this->getApiUrl() . '/oauth/authorize';
     }
 
 
-    public function getCredentials(): ?IntegrationCredentials
+    // @TODO add to BC trait and interface
+    public function getUserData()
     {
-        if (null === $this->credentials) {
-            $this->credentials = new IntegrationCredentials(...$this->integrationsHelper->getIntegrationConfiguration($this)->getApiKeys());
-        }
-
-        return $this->credentials;
+        return [];
     }
-
 
     public function isAuthorized(): bool
     {
         return false;
-        $credentials = $this->getCredentials();
-        false;
-        // TODO: Implement isAuthorized() method.
+        return
+            $this->hasIntegrationConfiguration() &&
+            $this->getIntegrationConfiguration()->isPublished() &&
+            $this->getApiKeys()['access_token'] !== null;
     }
 
-    public function getAuthorizationUrl(): string
+    public function getAuthorizatsssionUrl(): string
     {
-        return $this->getApiUrl() . '/oauth/v2/authorize';
+//        $parameters = [
+//            'client_id' => $this->getApiKeys()['client_id'],
+//            'redirect_uri' => $this->getRedirectUri(),
+//            'response_type' => 'code',
+//        ];
+//
+//        return $this->getApiUrl() . ' / oauth / v2 / authorize ? ' . http_build_query($parameters);
+        return $this->getAuthLoginUrl();
     }
 
     public function getIcon(): string
     {
-        return 'plugins/MauticEpathBundle/Assets/img/epath_logo.png';
+        return 'plugins / MauticEpathBundle / Assets / img / epath_logo . png';
     }
 
     public function getAuthConfigFormName(): string
@@ -118,10 +162,23 @@ public function getRequestToken() : ?string{
         return ConfigAuthType::class;
     }
 
+    public function authCallbackX(Request $request)
+    {
+        $accessToken = $request->get('code', null);
+        if (null === $accessToken) {
+            return 'mautic . citrix . error . oauthfail';
+        }
+        $currentKeys = $this->getApiKeys();
+        $currentKeys['access_token'] = $accessToken;
 
-//    public function setIntegrationConfiguration(Integration $integration) : void{
-//        $this->credentials = new IntegrationCredentials(...$this->integrationsHelper->getIntegrationConfiguration($this)->getApiKeys());
-//    }
+        $configuration = $this->getIntegrationConfiguration()->setApiKeys($currentKeys);
+        $this->integrationsHelper->saveIntegrationConfiguration($configuration);
+
+    }
+
+//public function setIntegrationConfiguration(Integration $integration) : void{
+//       $this->apiKeys = $this->integrationsHelper->getIntegrationConfiguration($this)->getApiKeys();
+//}
 
 
 //    /**
@@ -132,9 +189,9 @@ public function getRequestToken() : ?string{
 //    public function getRequiredKeyFields(): array
 //    {
 //        return [
-//            'app_name' => 'mautic.citrix.form.appname',
-//            'client_id' => 'mautic.citrix.form.clientid',
-//            'client_secret' => 'mautic.citrix.form.clientsecret',
+//            'app_name' => 'mautic . citrix . form . appname',
+//            'client_id' => 'mautic . citrix . form . clientid',
+//            'client_secret' => 'mautic . citrix . form . clientsecret',
 //        ];
 //    }
 
@@ -167,7 +224,7 @@ public function getRequestToken() : ?string{
      */
     public function getApiUrl()
     {
-        return 'https://api.getgo.com';
+        return 'https://authentication.logmeininc.com';
     }
 
     /**
@@ -177,17 +234,7 @@ public function getRequestToken() : ?string{
      */
     public function getAccessTokenUrl(): string
     {
-        return $this->getApiUrl() . '/oauth/v2/token';
-    }
-
-    /**
-     * @return string
-     */
-    public function getApiKey(): string
-    {
-        $keys = $this->getKeys();
-
-        return $keys[$this->getAuthTokenKey()];
+        return $this->getApiUrl() . '/oauth/token';
     }
 
     /**
@@ -195,7 +242,7 @@ public function getRequestToken() : ?string{
      *
      * @return string|null
      */
-    public function getBearerToken($inAuthorization = false)
+    public function getBearerToken(bool $inAuthorization = false): ?string
     {
         if (!$inAuthorization && isset($this->keys[$this->getAuthTokenKey()])) {
             return $this->keys[$this->getAuthTokenKey()];
@@ -214,14 +261,9 @@ public function getRequestToken() : ?string{
         return $keys['organizer_key'];
     }
 
-    /**
-     * Get the keys for the refresh token and expiry.
-     *
-     * @return array
-     */
-    public function getRefreshTokenKeys()
+    public function getRefreshTokenKey()
     {
-        return ['refresh_token', 'expires'];
+        return 'refresh_token';
     }
 
     /**

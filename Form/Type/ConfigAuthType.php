@@ -36,7 +36,7 @@ class ConfigAuthType extends AbstractType
     {
         /** @var GotomeetingConfigSupport $integration */
         $integration = $options['integration'];
-        $accessKey = $integration->getCredentials()->getClientSecret();
+        $accessKey = $integration->getApiKeys()['client_secret'] ?? null;
         $builder->add(
             'app_name',
             TextType::class,
