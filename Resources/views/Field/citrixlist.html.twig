@@ -1,0 +1,40 @@
+{{ dump() }}
+{% block body %}
+    {{- include('@MauticForm/Field/select.html.twig', {
+        'field': field,
+        'fields': fields|default([]),
+        'mappedFields': mappedFields|default([]),
+        'inForm': inForm|default(false),
+        'list': leadFieldCountryChoices(),
+        'id': id,
+        'formId': formId|default(0),
+        'formName': formName|default(''),
+    }) -}}
+
+
+
+    {# ... #}
+{% endblock %}
+
+{#<?php#}
+
+{#declare(strict_types=1);#}
+
+{#$listType = '';#}
+{#if (isset($field['customParameters']['listType'])) {#}
+{#    $listType = $field['customParameters']['listType'];#}
+{#}#}
+
+{#$list = \MauticPlugin\MauticCitrixBundle\Helper\CitrixHelper::getCitrixChoices($listType);#}
+
+{#echo $view->render(#}
+{#'MauticFormBundle:Field:select.html.php',#}
+{#[#}
+{#'field'    => $field,#}
+{#'inForm'   => (isset($inForm)) ? $inForm : false,#}
+{#'list'     => $list,#}
+{#'id'       => $id,#}
+{#'formId'   => (isset($formId)) ? $formId : 0,#}
+{#'formName' => (isset($formName)) ? $formName : '',#}
+{#]#}
+{#);#}

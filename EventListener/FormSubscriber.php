@@ -468,7 +468,7 @@ class FormSubscriber implements EventSubscriberInterface
                 'formType' => CitrixListType::class,
                 'template' => '@MauticCitrix/Field/citrixlist.html.twig',
                 'listType' => $product,
-                'list' => ['builderOption'],
+                'list' => ['builderOption'=>'where'],
             ]);
 
             $event->addValidator('plugin.citrix.validate.'.$product, [
