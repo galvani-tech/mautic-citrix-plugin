@@ -19,7 +19,6 @@ class CitrixServiceHelper
 
     public function isIntegrationAuthorized($integrationName): bool {
         $integration = $this->integrationsHelper->getIntegration($integrationName);
-
         return $integration->getIntegrationConfiguration()->isPublished();
     }
 }

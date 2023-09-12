@@ -2,14 +2,9 @@
 
 namespace MauticPlugin\MauticCitrixBundle\Integration\Traits;
 
-use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use kamermans\OAuth2\Exception\AccessTokenRequestException;
-use kamermans\OAuth2\GrantType\AuthorizationCode;
-use kamermans\OAuth2\GrantType\RefreshToken;
-use kamermans\OAuth2\OAuth2Middleware;
 use Mautic\IntegrationsBundle\Auth\Provider\AuthCredentialsInterface;
-use Mautic\PluginBundle\Entity\Integration;
 use Mautic\PluginBundle\Event\PluginIntegrationAuthCallbackUrlEvent;
 use Mautic\PluginBundle\Event\PluginIntegrationFormDisplayEvent;
 use Mautic\PluginBundle\Exception\ApiErrorException;
@@ -278,34 +273,24 @@ trait OauthAuthentication
                 }
                 break;
 
-            case 'oauth1a':
-                // After getting request_token and authorizing, post back to access_token
-                $settings['append_callback'] = true;
-                $settings['include_verifier'] = true;
 
-                $request = $this->getRequestStack()->getCurrentRequest();
-                // Get request token returned from Twitter and submit it to get access_token
-                $settings['request_token'] = ($this->getRequestStack()->getCurrentRequest()) ? $this->getRequestStack()->getCurrentRequest()->get('oauth_token') : '';
-
-                break;
         }
         $request = $this->getRequestStack()->getCurrentRequest();
-        $settings['authorize_session'] = true;
-        $method = (!isset($settings['method'])) ? 'POST' : $settings['method'];
 
         /* @var OAuth2ThreeLeggedCredentials $credentials */
         $credentials = $this->getCredentials();
         $credentials->setCode($request->get('code'));
         $credentials->setState($request->get('state'));
 
+        //  Remove standing api keys
         $this->setApiKeys(array_intersect_key($this->getApiKeys(), array_flip(['app_name', 'client_id', 'client_secret'])));
 
-        //  remove oauth token and refresh
+        //  remove oauth token and refresh token
         $credentials->setAccessToken(null)->setRefreshToken(null);
 
         $client = $this->httpFactory->getClient($credentials, $this);
         try {
-            $response = $client->get('https://api.getgo.com/G2M/rest/historicalMeetings', [
+            $client->get('https://api.getgo.com/G2M/rest/historicalMeetings', [
                 'query' => [
                     'startDate' => (new \DateTimeImmutable('2020-01-01'))->format('c'),
                     'endDate' => (new \DateTimeImmutable('2020-01-01'))->format('c'),

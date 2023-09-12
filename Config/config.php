@@ -130,6 +130,11 @@ return [
                 'arguments' => ['mautic.integrations.helper', 'router', 'event_dispatcher', 'translator', 'request_stack', 'mautic.integrations.auth_provider.oauth2threelegged'],
                 'tags' => ['mautic.integration', 'mautic.basic_integration'],
             ],
+            'mautic.integration.gotowebinar' => [
+                'class' => \MauticPlugin\MauticCitrixBundle\Integration\GotowebinarIntegration::class,
+                'arguments' => ['mautic.integrations.helper', 'router', 'event_dispatcher', 'translator', 'request_stack', 'mautic.integrations.auth_provider.oauth2threelegged'],
+                'tags' => ['mautic.integration', 'mautic.basic_integration'],
+            ],
             'mautic.integration.gotomeeting.configuration' => [
                 'class' => \MauticPlugin\MauticCitrixBundle\Integration\Support\GotomeetingConfigSupport::class,
                 'arguments' => ['mautic.integrations.helper', 'router', 'event_dispatcher', 'translator', 'request_stack', 'mautic.integrations.auth_provider.oauth2threelegged'],
