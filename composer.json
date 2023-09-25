@@ -1,6 +1,6 @@
 {
-    "name": "mautic/mautic-plugin-citrix",
-    "description": "Citrix Plugin",
+    "name": "galvani/mautic-plugin-goto",
+    "description": "Goto Plugin for Mautic",
     "type": "mautic-plugin",
     "keywords": [
         "mautic",
@@ -8,14 +8,25 @@
         "integration"
     ],
     "extra": {
-        "install-directory-name": "MauticCitrixBundle"
-    },
-    "conflict": {
-        "mautic/plugin-citrix": "*"
+        "install-directory-name": "GotoBundle"
     },
     "minimum-stability": "dev",
     "require": {
-        "php": ">=8.0",
-        "mautic/core-lib": "~5.0.0-alpha"
-    }
+        "php": "^8.0 <=9.0",
+        "mautic/core-lib": "^5.0"
+    },
+    "repositories": [
+        {
+            "type": "git",
+            "url": "https://github.com/mautic/FOSOAuthServerBundle.git"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/mautic/SpBundle.git"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/mautic/SymfonyBridgeBundle.git"
+        }
+    ]
 }

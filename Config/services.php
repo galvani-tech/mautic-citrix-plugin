@@ -2,20 +2,21 @@
 
 declare(strict_types=1);
 
-namespace MauticPlugin\MauticCitrixBundle\DependencyInjection;
-
 use Mautic\CoreBundle\DependencyInjection\MauticCoreExtension;
+use MauticPlugin\GotoBundle\Integration\GotoMeetingConfiguration;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 
-return function (ContainerConfigurator $configurator): void {
+return function (ContainerConfigurator $configurator) {
     $services = $configurator->services()
         ->defaults()
         ->autowire()
         ->autoconfigure()
         ->public();
 
-    $excludes = ['Event', 'Entity', 'Assets', 'Api'];
+    $excludes = ['Integration/Auth'];
 
-    $services->load('MauticPlugin\\MauticCitrixBundle\\', '../')
-        ->exclude('../{'.implode(',', [...MauticCoreExtension::DEFAULT_EXCLUDES, ...$excludes]).'}');
+    $services->load('MauticPlugin\\GotoBundle\\', '../')
+        ->exclude('../{'.implode(',', array_merge(MauticCoreExtension::DEFAULT_EXCLUDES, $excludes)).'}');
+
+    $services->alias('mautic.gotomeeting.configuration', GotoMeetingConfiguration::class);
 };
