@@ -10,13 +10,13 @@ use Mautic\IntegrationsBundle\Integration\Interfaces\ConfigFormAuthorizeButtonIn
 use Mautic\IntegrationsBundle\Integration\Interfaces\ConfigFormCallbackInterface;
 use Mautic\IntegrationsBundle\Integration\Interfaces\ConfigFormInterface;
 use MauticPlugin\GotoBundle\Form\Type\ConfigAuthType;
-use MauticPlugin\GotoBundle\Integration\GotoMeetingIntegration;
+use MauticPlugin\GotoBundle\Integration\GotomeetingIntegration;
 
 /**
  * This configures the UI for the plugin's configuration page.  The form is defined in the
  * {@see DetailsType}
  */
-class GotoMeetingIntegrationFormSupport extends GotoMeetingIntegration
+class GotomeetingIntegrationFormSupport extends GotomeetingIntegration
     implements ConfigFormInterface, ConfigFormAuthInterface, ConfigFormAuthorizeButtonInterface, ConfigFormCallbackInterface
 {
     use DefaultConfigFormTrait;

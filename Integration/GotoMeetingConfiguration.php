@@ -49,7 +49,7 @@ class GotoMeetingConfiguration implements ConfigTokenPersistenceInterface
 
     public function getIntegrationEntity(): Integration
     {
-        return $this->helper->getIntegration(GotoMeetingIntegration::NAME)->getIntegrationConfiguration();
+        return $this->helper->getIntegration(GotomeetingIntegration::NAME)->getIntegrationConfiguration();
     }
 
     public function getCredentials(): OAuth2ThreeLeggedCredentials
@@ -67,7 +67,7 @@ class GotoMeetingConfiguration implements ConfigTokenPersistenceInterface
             'code'=> $apiKeys['code'] ?? null,
             'state' => $apiKeys['state'] ?? null,
             'redirect_uri' => $this->router->generate('mautic_integration_auth_callback',
-                ['integration' => GotoMeetingIntegration::NAME],
+                ['integration' => GotomeetingIntegration::NAME],
                 UrlGeneratorInterface::ABSOLUTE_URL
             )
         ];
@@ -84,7 +84,7 @@ class GotoMeetingConfiguration implements ConfigTokenPersistenceInterface
             $apiKeys['code'] ?? null,
             $apiKeys['state'] ?? null,
             $this->router->generate('mautic_integration_auth_callback',
-                ['integration' => GotoMeetingIntegration::NAME],
+                ['integration' => GotomeetingIntegration::NAME],
                 UrlGeneratorInterface::ABSOLUTE_URL
             )
         );
@@ -111,7 +111,7 @@ class GotoMeetingConfiguration implements ConfigTokenPersistenceInterface
         }
 
         if ($this->requestStack->getSession()) {
-            $this->requestStack->getSession()->set(GotoMeetingIntegration::NAME . '_csrf_token', $state);
+            $this->requestStack->getSession()->set(GotomeetingIntegration::NAME . '_csrf_token', $state);
         }
 
         return $url;
@@ -126,7 +126,7 @@ class GotoMeetingConfiguration implements ConfigTokenPersistenceInterface
     {
         return $this->router->generate(
             'mautic_integration_auth_callback',
-            ['integration' => GotoMeetingIntegration::NAME],
+            ['integration' => GotomeetingIntegration::NAME],
             UrlGeneratorInterface::ABSOLUTE_URL
         );
     }

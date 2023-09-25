@@ -3,9 +3,10 @@
 declare(strict_types=1);    // not really worth anything here, but good practice
 
 return [
-    'name' => 'webmecanik/mautic-goto-plugin',
+    'name' => 'Goto Bundle',
     'description' => 'Goto products integration',
     'version' => '1.0',
+    'author' => 'Webmecanik',
     'authors' => [
         [
             'name' => 'Jan Kozak',
@@ -16,7 +17,7 @@ return [
     'services' => [
         'integrations' => [
             'mautic.integration.gotomeeting' => [
-                'class' => \MauticPlugin\GotoBundle\Integration\GotoMeetingIntegration::class,
+                'class' => \MauticPlugin\GotoBundle\Integration\GotomeetingIntegration::class,
                 'arguments' => [
                     'mautic.gotomeeting.configuration',
                     'request_stack',
@@ -29,7 +30,7 @@ return [
             ],
             // Provides the form types to use for the configuration UI
             'mautic.integration.gotomeeting.form_config' => [
-                'class' => \MauticPlugin\GotoBundle\Integration\Support\GotoMeetingIntegrationFormSupport::class,
+                'class' => \MauticPlugin\GotoBundle\Integration\Support\GotomeetingIntegrationFormSupport::class,
                 'arguments' => [
                     'mautic.gotomeeting.configuration',
                     'request_stack',

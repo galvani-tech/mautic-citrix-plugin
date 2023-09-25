@@ -14,12 +14,12 @@ use Mautic\PluginBundle\Exception\ApiErrorException;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
-class GotoMeetingIntegration implements IntegrationInterface
+class GotomeetingIntegration implements IntegrationInterface
 {
     use BcIntegrationSettingsTrait;
     use ConfigurationTrait;
 
-    public const NAME = 'GotoMeeting';
+    public const NAME = 'Gotomeeting';  //  this is purposely set to previous citrix name to avoid breaking changes
     public const DISPLAY_NAME = 'Goto Meeting';
 
     public function __construct(

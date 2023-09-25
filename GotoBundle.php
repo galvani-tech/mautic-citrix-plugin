@@ -6,7 +6,7 @@ namespace MauticPlugin\GotoBundle;
 
 use Mautic\IntegrationsBundle\Bundle\AbstractPluginBundle;
 
-class GotoPluginBundle extends AbstractPluginBundle
+class GotoBundle extends AbstractPluginBundle
 {
 
 }
