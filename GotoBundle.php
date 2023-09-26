@@ -8,5 +8,4 @@ use Mautic\IntegrationsBundle\Bundle\AbstractPluginBundle;
 
 class GotoBundle extends AbstractPluginBundle
 {
-
 }

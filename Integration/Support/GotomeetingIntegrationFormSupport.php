@@ -14,10 +14,15 @@ use MauticPlugin\GotoBundle\Integration\GotomeetingIntegration;
 
 /**
  * This configures the UI for the plugin's configuration page.  The form is defined in the
- * {@see DetailsType}
+ * {@see DetailsType}.
  */
-class GotomeetingIntegrationFormSupport extends GotomeetingIntegration
-    implements ConfigFormInterface, ConfigFormAuthInterface, ConfigFormAuthorizeButtonInterface, ConfigFormCallbackInterface
+class GotomeetingIntegrationFormSupport
+    extends GotomeetingIntegration
+    implements
+    ConfigFormInterface,
+    ConfigFormAuthInterface,
+    ConfigFormAuthorizeButtonInterface,
+    ConfigFormCallbackInterface
 {
     use DefaultConfigFormTrait;
 

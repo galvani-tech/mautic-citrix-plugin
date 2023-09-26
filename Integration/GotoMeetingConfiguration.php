@@ -9,6 +9,7 @@ use kamermans\OAuth2\Persistence\TokenPersistenceInterface as KamermansTokenPers
 use Mautic\IntegrationsBundle\Auth\Provider\Oauth2ThreeLegged\Credentials\CredentialsInterface;
 use Mautic\IntegrationsBundle\Auth\Provider\Oauth2ThreeLegged\HttpFactory;
 use Mautic\IntegrationsBundle\Auth\Support\Oauth2\ConfigAccess\ConfigTokenPersistenceInterface;
+use Mautic\IntegrationsBundle\Exception\PluginNotConfiguredException;
 use Mautic\IntegrationsBundle\Helper\IntegrationsHelper;
 use Mautic\PluginBundle\Entity\Integration;
 use MauticPlugin\GotoBundle\Integration\Auth\OAuth2ThreeLeggedCredentials;
@@ -16,7 +17,6 @@ use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\RouterInterface;
 
-/** @todo this function really sux */
 class GotoMeetingConfiguration implements ConfigTokenPersistenceInterface
 {
     public function __construct(
@@ -28,10 +28,14 @@ class GotoMeetingConfiguration implements ConfigTokenPersistenceInterface
     {
     }
 
+    private ?array $userData = null;
+
     public function getHttpClient(?CredentialsInterface $credentials = null)
     {
-        //  We will use this class as token persistence for the http client but any can be used, and perhaps it
-        //  might be placed in a separate class or trait
+        if (!$this->isConfigured()) {
+            throw new PluginNotConfiguredException('GotoMeeting integration is not configured.');
+        }
+
         return $this->httpFactory->getClient($credentials ?? $this->getCredentials(), $this);
     }
 
@@ -53,6 +57,14 @@ class GotoMeetingConfiguration implements ConfigTokenPersistenceInterface
         return count($filteredKeys) === count($requiredKeys);
     }
 
+    public function isConfigured(): bool
+    {
+        $entity = $this->getIntegrationEntity();
+
+        $keys = $entity->getApiKeys();
+        return isset($keys['client_id']) && isset($keys['client_secret']) && $entity->isPublished();
+    }
+
     public function getIntegrationEntity(): Integration
     {
         return $this->helper->getIntegration(GotomeetingIntegration::NAME)->getIntegrationConfiguration();
@@ -69,13 +81,13 @@ class GotoMeetingConfiguration implements ConfigTokenPersistenceInterface
             'refresh_token' => $apiKeys['refresh_token'] ?? null,
             'expires_at' => $apiKeys['expires_at'] ?? null,
             'token_url' => $this->getTokenUrl(),
-            'base_uri' => $this->getApiUrl(),
-            'code'=> $apiKeys['code'] ?? null,
+            'base_uri' => $this->getAuthenticationUrl(),
+            'code' => $apiKeys['code'] ?? null,
             'state' => $apiKeys['state'] ?? null,
             'redirect_uri' => $this->router->generate('mautic_integration_auth_callback',
                 ['integration' => GotomeetingIntegration::NAME],
                 UrlGeneratorInterface::ABSOLUTE_URL
-            )
+            ),
         ];
 
         return new OAuth2ThreeLeggedCredentials(...$credentialsConfig);
@@ -83,34 +95,31 @@ class GotoMeetingConfiguration implements ConfigTokenPersistenceInterface
 
     public function getApiUrl(): string
     {
+        return 'https://api.getgo.com';
+    }
+
+    public function getAuthenticationUrl(): string
+    {
         return 'https://authentication.logmeininc.com';
     }
 
-    public function getAuthorizationUrl(string $clientId = null): string
+    public function getAuthorizationUrl(): string
     {
         $apiKeys = $this->getIntegrationEntity()->getApiKeys();
 
         $state = $this->getAuthLoginState();
-        $url = $this->getApiUrl() . '/oauth/authorize'
+        $url = $this->getAuthenticationUrl() . '/oauth/authorize'
             . '?client_id=' . $apiKeys['client_id']
             . '&response_type=code'
             . '&redirect_uri=' . urlencode($this->getCallbackUrl())
             . '&state=' . $state;
-
-        if ($this->getAuthScope()) {
-            $url .= '&scope=' . urlencode($this->getAuthScope());
-        }
-
-        if ($this->requestStack->getSession()) {
-            $this->requestStack->getSession()->set(GotomeetingIntegration::NAME . '_csrf_token', $state);
-        }
 
         return $url;
     }
 
     public function getTokenUrl(): string
     {
-        return $this->getApiUrl() . '/oauth/token';
+        return $this->getAuthenticationUrl() . '/oauth/token';
     }
 
     public function getCallbackUrl(): string
@@ -122,14 +131,16 @@ class GotoMeetingConfiguration implements ConfigTokenPersistenceInterface
         );
     }
 
+    // Authentication related functions
     public function getAuthLoginState(): string
     {
-        return hash('sha1', uniqid((string)mt_rand()));
-    }
+        $state = hash('sha1', uniqid((string)mt_rand()));
+        $session = $this->requestStack->getSession();
 
-    public function getAuthScope(): string // TODO probably not needed
-    {
-        return '';
+        $session->set(GotomeetingIntegration::NAME . '_csrf_token', $state); // TODO not working
+        $session->save();
+
+        return $state;
     }
 
     public function getTokenPersistence(): KamermansTokenPersistenceInterface
@@ -153,6 +164,7 @@ class GotoMeetingConfiguration implements ConfigTokenPersistenceInterface
                         'expires_at' => $keys['expires_at'] ?? null,
                     ];
                 }
+
                 return null;
             },
             function (): bool { //  Delete tokens
@@ -168,15 +180,30 @@ class GotoMeetingConfiguration implements ConfigTokenPersistenceInterface
             },
             function (): bool {
                 $keys = $this->getIntegrationEntity()->getApiKeys() ?? null;
-                return  $keys['access_token'] ?? null !== null;
+
+                return $keys['access_token'] ?? null !== null;
             }
         );
     }
 
-    public function getUserData(): array
+    // User data function
+
+    /**
+     * @return array<string,string|array<string,string>>
+     * @throws PluginNotConfiguredException
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    public function getUserData(bool $forceReload = false): array
     {
-        $response = $this->getHttpClient()->get('https://api.getgo.com/identity/v1/Users/me');
-        $userData = json_decode($response->getBody()->getContents(), true);
-        return $userData;
+        if (!$this->isConfigured()) {
+            return [];
+        }
+
+        if ($this->userData === null || $forceReload) {
+            $response = $this->getHttpClient()->get($this->getApiUrl() . '/identity/v1/Users/me');
+            $this->userData = json_decode($response->getBody()->getContents(), true);
+        }
+
+        return $this->userData;
     }
 }

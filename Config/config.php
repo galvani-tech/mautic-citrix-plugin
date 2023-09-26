@@ -40,6 +40,6 @@ return [
                 ],
                 'tags' => ['mautic.config_integration'], // @todo tagging should be refactored to use services.php
             ],
-        ]
+        ],
     ],
 ];
