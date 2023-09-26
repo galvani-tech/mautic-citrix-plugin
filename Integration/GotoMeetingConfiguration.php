@@ -39,12 +39,18 @@ class GotoMeetingConfiguration implements ConfigTokenPersistenceInterface
     {
         $entity = $this->getIntegrationEntity();
 
-        return $entity->getIsPublished()
-            && ($entity->getApiKeys()['site_key'] ?? null) !== null
-            && ($entity->getApiKeys()['secret_key'] ?? null) !== null
-            && ($entity->getApiKeys()['access_token'] ?? null) !== null
-            && ($entity->getApiKeys()['refresh_token'] ?? null) !== null
-            && ($entity->getApiKeys()['expires_at'] ?? null) !== null;
+        if (!$entity->getIsPublished()) {
+            return false;
+        }
+
+        $requiredKeys = ['client_id', 'client_secret', 'access_token', 'refresh_token', 'expires_at'];
+        $apiKeys = $entity->getApiKeys();
+
+        $filteredKeys = array_filter($apiKeys, function ($key) use ($apiKeys, $requiredKeys) {
+            return in_array($key, $requiredKeys) && isset($apiKeys[$key]);
+        }, ARRAY_FILTER_USE_KEY);
+
+        return count($filteredKeys) === count($requiredKeys);
     }
 
     public function getIntegrationEntity(): Integration
@@ -73,21 +79,6 @@ class GotoMeetingConfiguration implements ConfigTokenPersistenceInterface
         ];
 
         return new OAuth2ThreeLeggedCredentials(...$credentialsConfig);
-
-        return new OAuth2ThreeLeggedCredentials(
-            $apiKeys['client_id'] ?? null,
-            $apiKeys['client_secret'] ?? null,
-            $apiKeys['access_token'] ?? null,
-            $apiKeys['refresh_token'] ?? null,
-            $this->getTokenUrl(),
-            $this->getApiUrl(),
-            $apiKeys['code'] ?? null,
-            $apiKeys['state'] ?? null,
-            $this->router->generate('mautic_integration_auth_callback',
-                ['integration' => GotomeetingIntegration::NAME],
-                UrlGeneratorInterface::ABSOLUTE_URL
-            )
-        );
     }
 
     public function getApiUrl(): string
@@ -148,7 +139,7 @@ class GotoMeetingConfiguration implements ConfigTokenPersistenceInterface
                 $standingKeys = $this->getIntegrationEntity()->getApiKeys();
                 $standingKeys['access_token'] = $keys['access_token'] ?? null;
                 $standingKeys['refresh_token'] = $keys['refresh_token'] ?? null;
-                $standingKeys['expires_at'] = $keys['expires_ar'] ?? null;
+                $standingKeys['expires_at'] = $keys['expires_at'] ?? null;
                 $configuration = $this->getIntegrationEntity();
                 $configuration->setApiKeys($standingKeys);
                 $this->helper->saveIntegrationConfiguration($configuration);
@@ -180,5 +171,12 @@ class GotoMeetingConfiguration implements ConfigTokenPersistenceInterface
                 return  $keys['access_token'] ?? null !== null;
             }
         );
+    }
+
+    public function getUserData(): array
+    {
+        $response = $this->getHttpClient()->get('https://api.getgo.com/identity/v1/Users/me');
+        $userData = json_decode($response->getBody()->getContents(), true);
+        return $userData;
     }
 }

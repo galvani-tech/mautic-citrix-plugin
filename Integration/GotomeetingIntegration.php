@@ -11,6 +11,7 @@ use Mautic\IntegrationsBundle\Integration\BC\BcIntegrationSettingsTrait;
 use Mautic\IntegrationsBundle\Integration\ConfigurationTrait;
 use Mautic\IntegrationsBundle\Integration\Interfaces\IntegrationInterface;
 use Mautic\PluginBundle\Exception\ApiErrorException;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
@@ -26,6 +27,7 @@ class GotomeetingIntegration implements IntegrationInterface
         protected GotoMeetingConfiguration $configuration,
         protected RequestStack             $requestStack,
         protected TranslatorInterface      $translator,
+        protected LoggerInterface          $logger,
     )
     {
     }
@@ -55,13 +57,13 @@ class GotomeetingIntegration implements IntegrationInterface
                     'endDate' => (new \DateTimeImmutable('2020-01-01'))->format('c'),
                 ],
             ]);
-        } catch (AccessTokenRequestException $exception) {  // TODO do
-            return $exception->getMessage();
-        } catch (ClientException $exception) {
-            return $exception->getMessage();
+            return false;
+        } catch (AccessTokenRequestException|ClientException $exception) {  // TODO do
+            $errorMessage = $this->parseEndpointError($exception);
+        } catch (\Exception $exception) {
         }
 
-        return false; // means no error
+        return $errorMessage ?? $exception->getMessage(); // means no error
     }
 
     protected function getAuthorizedClient(): ClientInterface
@@ -81,8 +83,10 @@ class GotomeetingIntegration implements IntegrationInterface
         $credentials->setCode($request->get('code'));
         $credentials->setState($request->get('state'));
 
-        //  remove oauth token and refresh token
-        $credentials->setAccessToken(null)->setRefreshToken(null);
+        //  remove oauth tokens
+        $credentials->setAccessToken(null)->setRefreshToken(null)->setExpiresAt(null);
+
+        $this->configuration->getTokenPersistence()->deleteToken();
 
         //  this call will perform token request and save token to credentials
         $client = $this->configuration->getHttpClient($credentials);
@@ -90,8 +94,37 @@ class GotomeetingIntegration implements IntegrationInterface
         return $client;
     }
 
-    public function getUserData($identifier, &$socialCache) {
-        return [];   // TODO Perhaps we can get some data from the API but see no reason nor endpoint to do so
+    public function getUserData($identifier, &$socialCache): array
+    {
+        if (!$this->configuration->isAuthorized()) {
+            return [];
+        }
+
+        return $this->configuration->getUserData();
+    }
+
+    private function parseEndpointError(AccessTokenRequestException|ClientException $errorMessage): string
+    {
+        preg_match('/\{(?:[^{}]|(?R))*\}/', $errorMessage->getMessage(), $matches);
+
+        if ($matches) {
+            try {
+                $json = json_decode($matches[0], true, 512, JSON_THROW_ON_ERROR);
+            } catch (\JsonException $e) {
+                $json = null;
+            }
+        }
+
+        $errorKey = match ($json['error_description'] ?? null) {
+            'error.auth.code.invalid.jwt' => 'mautic.integration.auth.invalid.jwt',
+            default => 'mautic.integration.auth.error.generic'
+        };
+        $errorKey = match ($json['int_err_code'] ?? null) {
+            'InvalidToken' => 'mautic.integration.auth.invalid.jwt',
+            default => $errorKey
+        };
+
+        return $this->translator->trans($errorKey, [], 'flashes');
     }
 }
 

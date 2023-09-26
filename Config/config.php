@@ -22,6 +22,7 @@ return [
                     'mautic.gotomeeting.configuration',
                     'request_stack',
                     'translator',
+                    'monolog.logger.mautic',
                 ],
                 'tags' => [ // @todo tagging should be refactored to use services.php but just not working
                     'mautic.integration',
@@ -35,6 +36,7 @@ return [
                     'mautic.gotomeeting.configuration',
                     'request_stack',
                     'translator',
+                    'monolog.logger.mautic',
                 ],
                 'tags' => ['mautic.config_integration'], // @todo tagging should be refactored to use services.php
             ],

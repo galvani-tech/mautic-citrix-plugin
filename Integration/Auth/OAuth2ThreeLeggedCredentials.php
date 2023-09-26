@@ -27,53 +27,12 @@ class OAuth2ThreeLeggedCredentials implements
         private ?string $code = null,
         private ?string $state = null,
         private ?string $redirect_uri = null,
+        private ?int $expires_at = null
     )
     {
     }
 
-    public function getRedirectUri(): string
-    {
-        return $this->redirect_uri;
-    }
-
-    public function getAuthorizationUrl(): string
-    {
-        return $this->constructAuthorizationUrl();
-    }
-
-    private function constructAuthorizationUrl(): string
-    {
-        return $this->base_uri ? $this->base_uri . '/oauth2/authorize' : '';
-    }
-
-    public function setAccessToken(?string $access_token): self
-    {
-        $this->access_token = $access_token;
-        return $this;
-    }
-
-    public function setRefreshToken(?string $refresh_token): self
-    {
-        $this->refresh_token = $refresh_token;
-        return $this;
-    }
-
-    public function setCode(?string $code): self
-    {
-        $this->code = $code;
-        return $this;
-    }
-
-    public function setState(?string $state): self
-    {
-        $this->state = $state;
-        return $this;
-    }
-
-    public function getState(): ?string
-    {
-        return $this->state;
-    }
+    //Getters
 
     public function getAccessToken(): ?string
     {
@@ -82,18 +41,18 @@ class OAuth2ThreeLeggedCredentials implements
 
     public function getAccessTokenExpiry(): ?\DateTimeImmutable
     {
-        // Not implemented as oauth middleware takes care of it.
-        return null;
+        // Not implemented as oauth middleware takes care of it. but I will.
+        return (new \DateTimeImmutable())->setTimestamp($this->expires_at ?? 0);
     }
 
-    public function getCode(): ?string
+    public function getAuthorizationUrl(): string
     {
-        return $this->code;
+        return $this->constructAuthorizationUrl();
     }
 
-    public function getTokenUrl(): string
+    public function getBaseUri(): ?string
     {
-        return $this->token_url;
+        return $this->base_uri;
     }
 
     public function getClientId(): ?string
@@ -106,14 +65,48 @@ class OAuth2ThreeLeggedCredentials implements
         return $this->client_secret;
     }
 
+    public function getCode(): ?string
+    {
+        return $this->code;
+    }
+
+    public function getExpiresAt(): ?int
+    {
+        return $this->expires_at;
+    }
+
     public function getRefreshToken(): ?string
     {
         return $this->refresh_token;
     }
 
-    public function getBaseUri(): ?string
+    public function getRedirectUri(): string
     {
-        return $this->base_uri;
+        return $this->redirect_uri;
+    }
+
+    public function getState(): ?string
+    {
+        return $this->state;
+    }
+
+    public function getTokenUrl(): string
+    {
+        return $this->token_url;
+    }
+    //End of Getters
+
+    private function constructAuthorizationUrl(): string
+    {
+        return $this->base_uri ? $this->base_uri . '/oauth2/authorize' : '';
+    }
+
+    //Setters
+
+    public function setAccessToken(?string $access_token): self
+    {
+        $this->access_token = $access_token;
+        return $this;
     }
 
     public function setBaseUri(?string $base_uri): self
@@ -121,4 +114,29 @@ class OAuth2ThreeLeggedCredentials implements
         $this->base_uri = $base_uri;
         return $this;
     }
+
+    public function setCode(?string $code): self
+    {
+        $this->code = $code;
+        return $this;
+    }
+
+    public function setExpiresAt(?int $expires_at): OAuth2ThreeLeggedCredentials
+    {
+        $this->expires_at = $expires_at;
+        return $this;
+    }
+
+    public function setRefreshToken(?string $refresh_token): self
+    {
+        $this->refresh_token = $refresh_token;
+        return $this;
+    }
+
+    public function setState(?string $state): self
+    {
+        $this->state = $state;
+        return $this;
+    }
+    //End of Setters
 }
