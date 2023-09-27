@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MauticPlugin\GotoBundle\Integration;
+namespace MauticPlugin\MauticCitrixBundle\Integration;
 
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\ClientException;
@@ -24,6 +24,7 @@ class GotomeetingIntegration implements IntegrationInterface
 
     public const NAME = 'Gotomeeting';  //  this is purposely set to previous citrix name to avoid breaking changes
     public const DISPLAY_NAME = 'Goto Meeting';
+    public const GOTO_PRODUCT_NAME = 'meeting';
 
     private ?array $userData = null;
 
@@ -48,7 +49,7 @@ class GotomeetingIntegration implements IntegrationInterface
 
     public function getIcon(): string
     {
-        return 'plugins/GotoBundle/Assets/img/goto_meeting.png';
+        return 'plugins/MauticCitrixBundle/Assets/img/goto_meeting.png';
     }
 
     public function authCallback(): bool|string
@@ -59,13 +60,13 @@ class GotomeetingIntegration implements IntegrationInterface
 
             return false;
         } catch (AccessTokenRequestException|ClientException $exception) {
-            $errorMessage = $this->parseEndpointError($exception);
+            $errorMessage = $this->parseAuthError($exception);
         } catch (ApiErrorException $exception) {
             $errorMessage = $this->translator->trans($exception->getMessage(), [], 'flashes');
         } catch (\Exception $exception) {
         }
 
-        return $errorMessage ?? $exception->getMessage(); // means no error
+        return $errorMessage ?? $exception->getMessage();
     }
 
     /**
@@ -109,7 +110,7 @@ class GotomeetingIntegration implements IntegrationInterface
         return $this->configuration->getUserData();
     }
 
-    private function parseEndpointError(AccessTokenRequestException|ClientException $errorMessage): string
+    private function parseAuthError(AccessTokenRequestException|ClientException $errorMessage): string
     {
         preg_match('/\{(?:[^{}]|(?R))*\}/', $errorMessage->getMessage(), $matches);
 

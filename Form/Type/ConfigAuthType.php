@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MauticPlugin\GotoBundle\Form\Type;
+namespace MauticPlugin\MauticCitrixBundle\Form\Type;
 
 use Mautic\IntegrationsBundle\Form\Type\NotBlankIfPublishedConstraintTrait;
 use Symfony\Component\Form\AbstractType;

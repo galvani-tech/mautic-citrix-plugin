@@ -17,7 +17,7 @@ return [
     'services' => [
         'integrations' => [
             'mautic.integration.gotomeeting' => [
-                'class' => \MauticPlugin\GotoBundle\Integration\GotomeetingIntegration::class,
+                'class' => \MauticPlugin\MauticCitrixBundle\Integration\GotomeetingIntegration::class,
                 'arguments' => [
                     'mautic.gotomeeting.configuration',
                     'request_stack',
@@ -31,7 +31,7 @@ return [
             ],
             // Provides the form types to use for the configuration UI
             'mautic.integration.gotomeeting.form_config' => [
-                'class' => \MauticPlugin\GotoBundle\Integration\Support\GotomeetingIntegrationFormSupport::class,
+                'class' => \MauticPlugin\MauticCitrixBundle\Integration\Support\GotomeetingIntegrationFormSupport::class,
                 'arguments' => [
                     'mautic.gotomeeting.configuration',
                     'request_stack',

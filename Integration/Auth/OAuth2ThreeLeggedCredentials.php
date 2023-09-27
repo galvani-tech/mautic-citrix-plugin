@@ -1,6 +1,6 @@
 <?php
 
-namespace MauticPlugin\GotoBundle\Integration\Auth;
+namespace MauticPlugin\MauticCitrixBundle\Integration\Auth;
 
 use Mautic\IntegrationsBundle\Auth\Provider\Oauth2ThreeLegged\Credentials\AccessTokenInterface;
 use Mautic\IntegrationsBundle\Auth\Provider\Oauth2ThreeLegged\Credentials\CodeInterface;
