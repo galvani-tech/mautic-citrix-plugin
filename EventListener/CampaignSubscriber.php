@@ -14,6 +14,7 @@ use MauticPlugin\MauticCitrixBundle\Form\Type\CitrixCampaignEventType;
 use MauticPlugin\MauticCitrixBundle\Helper\CitrixHelper;
 use MauticPlugin\MauticCitrixBundle\Helper\CitrixProducts;
 use MauticPlugin\MauticCitrixBundle\Model\CitrixModel;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
@@ -25,6 +26,7 @@ class CampaignSubscriber implements EventSubscriberInterface
     public function __construct(
         private CitrixModel $citrixModel,
         private TranslatorInterface $translator,
+        private LoggerInterface $logger,
     ) {
     }
 
@@ -103,7 +105,7 @@ class CampaignSubscriber implements EventSubscriberInterface
                 $this->startProduct($product, $event->getLead(), $products, $emailId, $actionId);
             }
         } catch (\Exception $ex) {
-            CitrixHelper::log('onCitrixAction - '.$product.': '.$ex->getMessage());
+            $this->logger->error('onCitrixAction - '.$product.': '.$ex->getMessage());
         }
 
         return true;

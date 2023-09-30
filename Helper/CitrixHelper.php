@@ -100,6 +100,7 @@ class CitrixHelper
      */
     public static function log($msg, $level = 'error'): void
     {
+        throw new \Exception('Deprecated');
         try {
             self::$logger->log($level, $msg);
         } catch (\Exception) {
@@ -146,6 +147,8 @@ class CitrixHelper
      */
     public static function getCitrixChoices($listType, $onlyFutures = true)
     {
+        throw new \Exception('Deprecated');
+
         try {
             // Check if integration is enabled
             if (!self::isAuthorized(self::listToIntegration($listType))) {
@@ -212,6 +215,7 @@ class CitrixHelper
      */
     public static function isAuthorized($integration)
     {
+        throw new \Exception('Deprecated');
         $myIntegration = self::getIntegration($integration);
 
         return $myIntegration && $myIntegration->getIntegrationSettings() && $myIntegration->getIntegrationSettings()->getIsPublished();
@@ -283,6 +287,8 @@ class CitrixHelper
      */
     public static function registerToProduct($product, $productId, $email, $firstname, $lastname)
     {
+        throw new \Exception('Deprecated');
+
         try {
             $response = [];
             if (CitrixProducts::GOTOWEBINAR === $product) {
@@ -327,6 +333,8 @@ class CitrixHelper
      */
     public static function startToProduct($product, $productId, $email, $firstname, $lastname)
     {
+        throw new \Exception('Deprecated');
+
         try {
             if (CitrixProducts::GOTOMEETING === $product) {
                 $response = self::getG2mApi()->request(
@@ -391,6 +399,8 @@ class CitrixHelper
      */
     public static function getEventName($product, $productId)
     {
+        throw new \Exception('Deprecated');
+
         if (CitrixProducts::GOTOWEBINAR === $product) {
             $result = self::getG2wApi()->request($product.'s/'.$productId);
 
@@ -418,6 +428,8 @@ class CitrixHelper
      */
     public static function getRegistrants($product, $productId)
     {
+        throw new \Exception('Deprecated');
+
         $result = [];
         switch ($product) {
             case CitrixProducts::GOTOWEBINAR:
@@ -442,6 +454,8 @@ class CitrixHelper
      */
     public static function getAttendees($product, $productId)
     {
+        throw new \Exception('Deprecated');
+
         $result = [];
         switch ($product) {
             case CitrixProducts::GOTOWEBINAR:
