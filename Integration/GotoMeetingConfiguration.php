@@ -70,9 +70,7 @@ class GotoMeetingConfiguration implements ConfigTokenPersistenceInterface
         $requiredKeys = ['client_id', 'client_secret', 'access_token', 'refresh_token', 'expires_at'];
         $apiKeys = $this->getApiKeys();
 
-        $filteredKeys = array_filter($apiKeys, function ($key) use ($apiKeys, $requiredKeys) {
-            return in_array($key, $requiredKeys) && isset($apiKeys[$key]);
-        }, ARRAY_FILTER_USE_KEY);
+        $filteredKeys = array_filter($apiKeys, fn($key) => in_array($key, $requiredKeys) && isset($apiKeys[$key]), ARRAY_FILTER_USE_KEY);
 
         return count($filteredKeys) === count($requiredKeys);
     }
@@ -131,13 +129,12 @@ class GotoMeetingConfiguration implements ConfigTokenPersistenceInterface
         $apiKeys = $this->getApiKeys();
 
         $state = $this->getAuthLoginState();
-        $url = $this->getAuthenticationUrl() . '/oauth/authorize'
+
+        return $this->getAuthenticationUrl() . '/oauth/authorize'
             . '?client_id=' . $apiKeys['client_id']
             . '&response_type=code'
             . '&redirect_uri=' . urlencode($this->getCallbackUrl())
             . '&state=' . $state;
-
-        return $url;
     }
 
     public function getTokenUrl(): string
@@ -157,7 +154,7 @@ class GotoMeetingConfiguration implements ConfigTokenPersistenceInterface
     // Authentication related functions
     public function getAuthLoginState(): string
     {
-        $state = hash('sha1', uniqid((string)mt_rand()));
+        $state = hash('sha1', uniqid((string)random_int(0, mt_getrandmax())));
         $session = $this->requestStack->getSession();
 
         $session->set(GotomeetingIntegration::NAME . '_csrf_token', $state); // TODO not working
@@ -224,7 +221,7 @@ class GotoMeetingConfiguration implements ConfigTokenPersistenceInterface
 
         if ($this->userData === null || $forceReload) {
             $response = $this->getHttpClient()->get($this->getApiUrl() . '/identity/v1/Users/me');
-            $this->userData = json_decode($response->getBody()->getContents(), true);
+            $this->userData = json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
         }
 
         return $this->userData;

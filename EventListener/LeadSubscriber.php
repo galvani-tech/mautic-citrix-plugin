@@ -43,7 +43,7 @@ class LeadSubscriber implements EventSubscriberInterface
     {
         $activeProducts = [];
         foreach (CitrixProducts::toArray() as $p) {
-            if (CitrixHelper::isAuthorized('Goto'.$p)) {
+            if ($this->serviceHelper->isIntegrationAuthorized($p)) {
                 $activeProducts[] = $p;
             }
         }
@@ -117,7 +117,7 @@ class LeadSubscriber implements EventSubscriberInterface
 
         $activeProducts = [];
         foreach (CitrixProducts::toArray() as $p) {
-            if (CitrixHelper::isAuthorized('Goto'.$p)) {
+            if ($this->serviceHelper->isIntegrationAuthorized($p)) {
                 $activeProducts[] = $p;
             }
         }
@@ -198,7 +198,7 @@ class LeadSubscriber implements EventSubscriberInterface
     {
         $activeProducts = [];
         foreach (CitrixProducts::toArray() as $p) {
-            if (CitrixHelper::isAuthorized('Goto'.$p)) {
+            if ($this->serviceHelper->isIntegrationAuthorized($p)) {
                 $activeProducts[] = $p;
             }
         }
@@ -254,7 +254,7 @@ class LeadSubscriber implements EventSubscriberInterface
                         );
                     }
 
-                    if ($leadId) {
+                    if ($leadId !== 0) {
                         $query->andWhere(
                             $query->expr()->eq($alias.$k.'.lead_id', $leadId)
                         );

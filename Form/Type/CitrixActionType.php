@@ -6,29 +6,19 @@ namespace MauticPlugin\MauticCitrixBundle\Form\Type;
 
 use Mautic\EmailBundle\Form\Type\EmailListType;
 use Mautic\FormBundle\Model\FieldModel;
-use MauticPlugin\MauticCitrixBundle\Helper\CitrixHelper;
 use MauticPlugin\MauticCitrixBundle\Helper\CitrixProducts;
+use MauticPlugin\MauticCitrixBundle\Helper\CitrixServiceHelper;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Validator\Constraints\NotBlank;
 
-/**
- * Class FormFieldSelectType.
- */
 class CitrixActionType extends AbstractType
 {
-    /**
-     * @var FieldModel
-     */
-    protected $model;
-
-    /**
-     * CitrixActionType constructor.
-     */
-    public function __construct(FieldModel $fieldModel)
-    {
-        $this->model = $fieldModel;
+    public function __construct(
+        private FieldModel $model,
+        private CitrixServiceHelper $serviceHelper
+    ) {
     }
 
     /**
@@ -44,7 +34,7 @@ class CitrixActionType extends AbstractType
     {
         if (!(array_key_exists('attr', $options) && array_key_exists('data-product', $options['attr'])) ||
             !CitrixProducts::isValidValue($options['attr']['data-product']) ||
-            !CitrixHelper::isAuthorized('Goto'.$options['attr']['data-product'])
+            !$this->serviceHelper->isIntegrationAuthorized($options['attr']['data-product'])
         ) {
             return;
         }
@@ -79,7 +69,7 @@ class CitrixActionType extends AbstractType
             $products = [
                 'form' => 'User selection from form',
             ];
-            $products = array_replace($products, CitrixHelper::getCitrixChoices($product));
+            $products = array_replace($products, $this->serviceHelper->getCitrixChoices($product));
 
             $builder->add(
                 'product',

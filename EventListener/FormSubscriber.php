@@ -27,6 +27,7 @@ use MauticPlugin\MauticCitrixBundle\Helper\CitrixHelper;
 use MauticPlugin\MauticCitrixBundle\Helper\CitrixProducts;
 use MauticPlugin\MauticCitrixBundle\Helper\CitrixServiceHelper;
 use MauticPlugin\MauticCitrixBundle\Model\CitrixModel;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Process\Exception\InvalidArgumentException;
@@ -39,13 +40,14 @@ class FormSubscriber implements EventSubscriberInterface
     use CitrixStartTrait;
 
     public function __construct(
+        private CitrixServiceHelper $serviceHelper,
         private CitrixModel $citrixModel,
         private FormModel $formModel,
         private SubmissionModel $submissionModel,
         private TranslatorInterface $translator,
         private EntityManager $entityManager,
         private Environment $templating,
-        private CitrixServiceHelper $citrixServiceHelper,
+        private LoggerInterface $logger,
     ) {
     }
 
@@ -167,7 +169,7 @@ class FormSubscriber implements EventSubscriberInterface
                 throw new BadRequestHttpException('There are no products to '.((null === $startType) ? 'register' : 'start'));
             } // end-block
         } catch (\Exception $ex) {
-            CitrixHelper::log('onProductRegistration - '.$product.': '.$ex->getMessage());
+            $this->logger->error('onProductRegistration - '.$product.': '.$ex->getMessage());
             $validationException = new ValidationException($ex->getMessage());
             $validationException->setViolations(
                 [
@@ -224,10 +226,10 @@ class FormSubscriber implements EventSubscriberInterface
     {
         $field        = $event->getField();
         $eventType    = preg_filter('/^plugin\.citrix\.select\.(.*)$/', '$1', $field->getType());
-        $doValidation = CitrixHelper::isAuthorized('Goto'.$eventType);
+        $doValidation = $this->serviceHelper->isIntegrationAuthorized($eventType);
 
         if ($doValidation) {
-            $list = CitrixHelper::getCitrixChoices($eventType);
+            $list = $this->serviceHelper->getCitrixChoices($eventType);
             /** @var array $values */
             $values = $event->getValue();
 
@@ -265,7 +267,7 @@ class FormSubscriber implements EventSubscriberInterface
         foreach ($fields as $field) {
             if ('plugin.citrix.select.'.$product === $field->getType()) {
                 if ([] === $productlist) {
-                    $this->citrixServiceHelper->getCitrixChoices($product);
+                    $this->serviceHelper->getCitrixChoices($product);
                 }
                 $alias = $field->getAlias();
                 /** @var array $productIds */
@@ -295,10 +297,10 @@ class FormSubscriber implements EventSubscriberInterface
             foreach ($actions as $action) {
                 if (str_starts_with($action->getType(), 'plugin.citrix.action')) {
                     if ([] === $productlist) {
-                        $productlist = CitrixHelper::getCitrixChoices($product);
+                        $productlist = $this->serviceHelper->getCitrixChoices($product);
                     }
                     $actionProduct = preg_filter('/^.+\.([^\.]+)$/', '$1', $action->getType());
-                    if (!CitrixHelper::isAuthorized('Goto'.$actionProduct)) {
+                    if (!$this->serviceHelper->isIntegrationAuthorized($actionProduct)) {
                         continue;
                     }
                     $actionAction = preg_filter('/^.+\.([^\.]+\.[^\.]+)$/', '$1', $action->getType());
@@ -375,7 +377,7 @@ class FormSubscriber implements EventSubscriberInterface
             foreach ($actions as $action) {
                 if (str_starts_with($action->getType(), 'plugin.citrix.action')) {
                     $actionProduct = preg_filter('/^.+\.([^\.]+)$/', '$1', $action->getType());
-                    if (!CitrixHelper::isAuthorized('Goto'.$actionProduct)) {
+                    if (!$this->serviceHelper->isIntegrationAuthorized($actionProduct)) {
                         continue;
                     }
                     $actionAction = preg_filter('/^.+\.([^\.]+\.[^\.]+)$/', '$1', $action->getType());
@@ -459,7 +461,7 @@ class FormSubscriber implements EventSubscriberInterface
     {
         $activeProducts = array_filter(
             CitrixProducts::toArray(),
-            fn ($product) => $this->citrixServiceHelper->isIntegrationAuthorized($product)
+            fn ($product) => $this->serviceHelper->isIntegrationAuthorized($product)
         );
 
         foreach ($activeProducts as $product) {
@@ -468,7 +470,7 @@ class FormSubscriber implements EventSubscriberInterface
                 'formType' => CitrixListType::class,
                 'template' => '@MauticCitrix/Field/citrixlist.html.twig',
                 'listType' => $product,
-                'list' => $this->citrixServiceHelper->getCitrixChoices($product),
+                'list' => $this->serviceHelper->getCitrixChoices($product),
             ]);
 
             $event->addValidator('plugin.citrix.validate.'.$product, [

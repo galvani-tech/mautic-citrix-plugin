@@ -114,10 +114,10 @@ class GotomeetingIntegration implements IntegrationInterface
     {
         preg_match('/\{(?:[^{}]|(?R))*\}/', $errorMessage->getMessage(), $matches);
 
-        if ($matches) {
+        if ($matches !== []) {
             try {
                 $json = json_decode($matches[0], true, 512, JSON_THROW_ON_ERROR);
-            } catch (\JsonException $e) {
+            } catch (\JsonException) {
                 $json = null;
             }
         }

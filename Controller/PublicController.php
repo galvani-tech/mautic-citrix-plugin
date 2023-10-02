@@ -44,23 +44,23 @@ class PublicController extends CommonController
                 ];
                 curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
                 curl_setopt($ch, CURLOPT_POST, true);
-                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($request->request->all()));
+                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($request->request->all(), JSON_THROW_ON_ERROR));
             }
             curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
             curl_setopt($ch, CURLOPT_HEADER, true);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_USERAGENT, $request->server->get('HTTP_USER_AGENT', ''));
-            list($header, $contents) = preg_split('/([\r\n][\r\n])\\1/', curl_exec($ch), 2);
+            [$header, $contents] = preg_split('/([\r\n][\r\n])\\1/', curl_exec($ch), 2);
             $status                  = curl_getinfo($ch);
             curl_close($ch);
         }
 
         // Set the JSON data object contents, decoding it from JSON if possible.
-        $decoded_json = json_decode($contents);
+        $decoded_json = json_decode($contents, null, 512, JSON_THROW_ON_ERROR);
         $data         = $decoded_json ?: $contents;
 
         // Generate JSON/JSONP string
-        $json     = json_encode($data);
+        $json     = json_encode($data, JSON_THROW_ON_ERROR);
         $response = new Response($json, $status['http_code']);
 
         // Generate appropriate content-type header.

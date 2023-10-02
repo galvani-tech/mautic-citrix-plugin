@@ -22,32 +22,21 @@ trait CitrixStartTrait
         $this->emailModel = $emailModel;
     }
 
-    /**
-     * @param string $product
-     * @param Lead   $lead
-     *
-     * @throws \Symfony\Component\HttpKernel\Exception\BadRequestHttpException
-     * @throws \Symfony\Component\DependencyInjection\Exception\ServiceCircularReferenceException
-     * @throws \Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException
-     * @throws \Doctrine\ORM\ORMInvalidArgumentException
-     * @throws \Doctrine\ORM\OptimisticLockException
-     * @throws \InvalidArgumentException
-     * @throws \Doctrine\ORM\ORMException
-     */
-    public function startProduct($product, $lead, array $productsToStart, $emailId = null, $actionId = null)
+    public function startProduct(string $product, Lead $lead, array $productsToStart, ?int $emailId = null, ?int $actionId = null)
     {
-        $leadFields                         = $lead->getProfileFields();
-        [$email, $firstname, $lastname]     = [
-            array_key_exists('email', $leadFields) ? $leadFields['email'] : '',
-            array_key_exists('firstname', $leadFields) ? $leadFields['firstname'] : '',
-            array_key_exists('lastname', $leadFields) ? $leadFields['lastname'] : '',
+        $leadFields = $lead->getProfileFields();
+        [$email, $firstname, $lastname] = [
+            $leadFields['email'] ?? '',
+            $leadFields['firstname'] ?? '',
+            $leadFields['lastname'] ?? '',
         ];
 
         if ('' !== $email && '' !== $firstname && '' !== $lastname) {
             foreach ($productsToStart as $productToStart) {
                 $productId = $productToStart['productId'];
 
-                $hostUrl = CitrixHelper::startToProduct(
+                //$hostUrl = CitrixHelper::startToProduct(
+                $hostUrl = $this->serviceHelper->startToProduct(
                     $product,
                     $productId,
                     $email,
@@ -58,16 +47,15 @@ trait CitrixStartTrait
                 if ('' !== $hostUrl) {
                     // send email using template from form action properties
                     // and replace the tokens in the body with the hostUrl
-
                     $emailEntity = $this->emailModel->getEntity($emailId);
 
                     // make sure the email still exists and is published
                     if (null !== $emailEntity && $emailEntity->isPublished()) {
                         $content = $emailEntity->getCustomHtml();
                         // replace tokens
-                        if (CitrixHelper::isAuthorized('Goto'.$product)) {
+                        if ($this->serviceHelper->isIntegrationAuthorized($product)) {
                             $params = [
-                                'product'     => $product,
+                                'product' => $product,
                                 'productLink' => $hostUrl,
                                 'productText' => sprintf($this->translator->trans('plugin.citrix.start.producttext'), ucfirst($product)),
                             ];
@@ -76,16 +64,16 @@ trait CitrixStartTrait
                                 'MauticCitrixBundle:SubscribedEvents\EmailToken:token.html.php',
                                 $params
                             );
-                            $content = str_replace('{'.$product.'_button}', $button, $content);
+                            $content = str_replace('{' . $product . '_button}', $button, $content);
                         } else {
                             // remove the token
-                            $content = str_replace('{'.$product.'_button}', '', $content);
+                            $content = str_replace('{' . $product . '_button}', '', $content);
                         }
 
                         // set up email data
                         $emailEntity->setCustomHtml($content);
                         $leadFields['id'] = $lead->getId();
-                        $options          = ['source' => ['trigger', $actionId]];
+                        $options = ['source' => ['trigger', $actionId]];
                         $this->emailModel->sendEmail($emailEntity, $leadFields, $options);
                     } else {
                         throw new BadRequestHttpException('Unable to load emal template!');
@@ -93,8 +81,8 @@ trait CitrixStartTrait
 
                     // add event to DB
                     $eventName = CitrixHelper::getCleanString(
-                        $productToStart['productTitle']
-                    ).'_#'.$productToStart['productId'];
+                            $productToStart['productTitle']
+                        ) . '_#' . $productToStart['productId'];
 
                     $this->citrixModel->addEvent(
                         $product,

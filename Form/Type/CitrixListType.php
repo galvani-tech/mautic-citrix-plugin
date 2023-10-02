@@ -61,12 +61,4 @@ class CitrixListType extends AbstractType
             ]
         );
     }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getBlockPrefix()
-    {
-        return 'citrix_list';
-    }
 }

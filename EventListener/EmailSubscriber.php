@@ -12,7 +12,9 @@ use MauticPlugin\MauticCitrixBundle\Entity\CitrixEvent;
 use MauticPlugin\MauticCitrixBundle\Event\TokenGenerateEvent;
 use MauticPlugin\MauticCitrixBundle\Helper\CitrixHelper;
 use MauticPlugin\MauticCitrixBundle\Helper\CitrixProducts;
+use MauticPlugin\MauticCitrixBundle\Helper\CitrixServiceHelper;
 use MauticPlugin\MauticCitrixBundle\Model\CitrixModel;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
@@ -21,10 +23,12 @@ use Twig\Environment;
 class EmailSubscriber implements EventSubscriberInterface
 {
     public function __construct(
+        private CitrixServiceHelper $serviceHelper,
         private CitrixModel $citrixModel,
         private TranslatorInterface $translator,
         private EventDispatcherInterface $dispatcher,
-        private Environment $templating
+        private Environment $templating,
+        private LoggerInterface $logger,
     ) {
     }
 
@@ -51,7 +55,7 @@ class EmailSubscriber implements EventSubscriberInterface
         if ('webinar' == $event->getProduct()) {
             $event->setProductLink('https://www.gotomeeting.com/webinar');
             $params = $event->getParams();
-            if (!empty($params['lead'])) {
+            if (isset($params['lead']) && $params['lead'] !== '') {
                 $email  = $params['lead']['email'];
                 $repo   = $this->citrixModel->getRepository();
                 $result = $repo->findBy(
@@ -66,7 +70,7 @@ class EmailSubscriber implements EventSubscriberInterface
                     $event->setProductLink($ce->getJoinUrl());
                 }
             } else {
-                CitrixHelper::log('Updating webinar token failed! Email not found '.implode(', ', $event->getParams()));
+                $this->logger->error('Updating webinar token failed! Lead not found '.implode(', ', $event->getParams()));
             }
             $event->setProductText($this->translator->trans('plugin.citrix.token.join_webinar'));
         }
@@ -82,7 +86,7 @@ class EmailSubscriber implements EventSubscriberInterface
         $tokens         = [];
         $activeProducts = [];
         foreach (['meeting', 'training', 'assist', 'webinar'] as $p) {
-            if (CitrixHelper::isAuthorized('Goto'.$p)) {
+            if ($this->serviceHelper->isIntegrationAuthorized($p)) {
                 $activeProducts[]          = $p;
                 $tokens['{'.$p.'_button}'] = $this->translator->trans('plugin.citrix.token.'.$p.'_button');
                 if ('webinar' === $p) {
@@ -140,7 +144,7 @@ class EmailSubscriber implements EventSubscriberInterface
 
         $tokens = [];
         foreach ($products as $product) {
-            if (CitrixHelper::isAuthorized('Goto'.$product)) {
+            if ($this->serviceHelper->isIntegrationAuthorized($product)) {
                 $params = [
                     'product'     => $product,
                     'productText' => '',
@@ -156,7 +160,7 @@ class EmailSubscriber implements EventSubscriberInterface
                 if ($triggerEvent && $this->dispatcher->hasListeners(CitrixEvents::ON_CITRIX_TOKEN_GENERATE)) {
                     $params['lead'] = $event->getLead();
                     $tokenEvent     = new TokenGenerateEvent($params);
-                    $this->dispatcher->dispatch(CitrixEvents::ON_CITRIX_TOKEN_GENERATE, $tokenEvent);
+                    $this->dispatcher->dispatch($tokenEvent, CitrixEvents::ON_CITRIX_TOKEN_GENERATE);
                     $params = $tokenEvent->getParams();
                     unset($tokenEvent);
                 }

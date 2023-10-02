@@ -19,7 +19,7 @@ return function (ContainerConfigurator $configurator) {
         ->tag('kernel.event_subscriber');
 
     $services->load('MauticPlugin\\MauticCitrixBundle\\', '../')
-        ->exclude('../{'.implode(',', array_merge(MauticCoreExtension::DEFAULT_EXCLUDES, $excludes)).'}');
+        ->exclude('../{'.implode(',', [...MauticCoreExtension::DEFAULT_EXCLUDES, ...$excludes]).'}');
 
     $services->alias('mautic.gotomeeting.configuration', GotoMeetingConfiguration::class);
 };

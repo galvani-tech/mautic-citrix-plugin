@@ -47,7 +47,7 @@ class CitrixCampaignEventType extends AbstractType
     {
         if (!(array_key_exists('attr', $options) && array_key_exists('data-product', $options['attr']))
             || !CitrixProducts::isValidValue($options['attr']['data-product'])
-            || !CitrixHelper::isAuthorized('Goto'.$options['attr']['data-product'])
+            || !$this->serviceHelper->isIntegrationAuthorized($options['attr']['data-product'])
         ) {
             return;
         }
@@ -87,13 +87,5 @@ class CitrixCampaignEventType extends AbstractType
                 'multiple'          => true,
             ]
         );
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getBlockPrefix()
-    {
-        return 'citrix_campaign_event';
     }
 }

@@ -13,6 +13,7 @@ use MauticPlugin\MauticCitrixBundle\Form\Type\CitrixCampaignActionType;
 use MauticPlugin\MauticCitrixBundle\Form\Type\CitrixCampaignEventType;
 use MauticPlugin\MauticCitrixBundle\Helper\CitrixHelper;
 use MauticPlugin\MauticCitrixBundle\Helper\CitrixProducts;
+use MauticPlugin\MauticCitrixBundle\Helper\CitrixServiceHelper;
 use MauticPlugin\MauticCitrixBundle\Model\CitrixModel;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -24,13 +25,13 @@ class CampaignSubscriber implements EventSubscriberInterface
     use CitrixStartTrait;
 
     public function __construct(
+        private CitrixServiceHelper $serviceHelper,
         private CitrixModel $citrixModel,
         private TranslatorInterface $translator,
         private LoggerInterface $logger,
     ) {
     }
 
-    /** {@inheritdoc} */
     public static function getSubscribedEvents()
     {
         return [
@@ -84,7 +85,7 @@ class CampaignSubscriber implements EventSubscriberInterface
         $list     = $config[$product.'-list'];
         $actionId = 'citrix.action.'.$product;
         try {
-            $productlist = CitrixHelper::getCitrixChoices($product);
+            $productlist = $this->serviceHelper->getCitrixChoices($product);
             $products    = [];
 
             foreach ($list as $productId) {
@@ -176,12 +177,9 @@ class CampaignSubscriber implements EventSubscriberInterface
 
     public function onCampaignBuild(CampaignBuilderEvent $event): void
     {
-        $activeProducts = [];
-        foreach (CitrixProducts::toArray() as $p) {
-            if (CitrixHelper::isAuthorized('Goto'.$p)) {
-                $activeProducts[] = $p;
-            }
-        }
+
+        $activeProducts = array_filter(CitrixProducts::toArray(), [$this->serviceHelper, 'isIntegrationAuthorized']);
+
         if ([] === $activeProducts) {
             return;
         }

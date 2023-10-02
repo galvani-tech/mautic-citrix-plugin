@@ -35,7 +35,7 @@ trait CitrixRegistrationTrait
             foreach ($productsToRegister as $productToRegister) {
                 $productId = $productToRegister['productId'];
 
-                $joinURL = CitrixHelper::registerToProduct(
+                $joinURL = $this->serviceHelper->registerToProduct(
                     $product,
                     $productId,
                     $email,

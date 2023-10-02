@@ -96,11 +96,12 @@ class CitrixHelper
     }
 
     /**
+     * @deprecated
      * @param string $level
      */
     public static function log($msg, $level = 'error'): void
     {
-        throw new \Exception('Deprecated');
+        /** @deprecated  */
         try {
             self::$logger->log($level, $msg);
         } catch (\Exception) {
@@ -139,286 +140,29 @@ class CitrixHelper
         }
     }
 
-    /**
-     * @param      $listType    string Can be one of 'webinar', 'meeting', 'training' or 'assist'
-     * @param bool $onlyFutures
-     *
-     * @return array
-     */
-    public static function getCitrixChoices($listType, $onlyFutures = true)
+    public static function getCleanString(string $str, int $limit = 20): string
     {
-        throw new \Exception('Deprecated');
+        // Lowercase the string and convert HTML entities to UTF-8
+        $str = htmlentities(mb_strtolower($str), ENT_NOQUOTES, 'utf-8');
 
-        try {
-            // Check if integration is enabled
-            if (!self::isAuthorized(self::listToIntegration($listType))) {
-                throw new AuthenticationException('You are not authorized to view '.$listType);
-            }
-            $currentYear = date('Y');
-            // TODO: the date range can be configured elsewhere
-            $fromTime = ($currentYear - 10).'-01-01T00:00:00Z';
-            $toTime   = ($currentYear + 10).'-01-01T00:00:00Z';
-            if ('webinar' === $listType) {
-                $url    = 'upcomingWebinars';
-                $params = [];
-                if (!$onlyFutures) {
-                    $url                =    'historicalWebinars';
-                    $params['fromTime'] = $fromTime;
-                    $params['toTime']   = $toTime;
-                }
-                $results = self::getG2wApi()->request($url, $params);
-
-                return iterator_to_array(self::getKeyPairs($results, 'webinarID', 'subject'));
-            } elseif ('meeting' === $listType) {
-                $url    = 'upcomingMeetings';
-                $params = [];
-                if (!$onlyFutures) {
-                    $url                 = 'historicalMeetings';
-                    $params['startDate'] = $fromTime;
-                    $params['endDate']   = $toTime;
-                }
-                $results = self::getG2mApi()->request($url, $params);
-
-                return iterator_to_array(self::getKeyPairs($results, 'meetingId', 'subject'));
-            } elseif ('training' === $listType) {
-                $results = self::getG2tApi()->request('trainings');
-
-                return iterator_to_array(self::getKeyPairs($results, 'trainingKey', 'name'));
-            } elseif ('assist' === $listType) {
-                // show sessions in the last month
-                // times must be in ISO format: YYYY-MM-ddTHH:mm:ssZ
-                $params = [
-                    'fromTime' => preg_filter(
-                        '/^(.+)[\+\-].+$/',
-                        '$1Z',
-                        date('c', strtotime('-1 month', time()))
-                    ),
-                    'toTime'      => preg_filter('/^(.+)[\+\-].+$/', '$1Z', date('c')),
-                    'sessionType' => 'screen_sharing',
-                ];
-                $results = self::getG2aApi()->request('sessions', $params);
-                if ((array) $results && array_key_exists('sessions', $results)) {
-                    return iterator_to_array(self::getAssistPairs($results['sessions']));
-                }
-            }
-        } catch (\Exception $ex) {
-            self::log($ex->getMessage());
-        }
-
-        return [];
-    }
-
-    /**
-     * @param $integration string
-     *
-     * @return bool
-     */
-    public static function isAuthorized($integration)
-    {
-        throw new \Exception('Deprecated');
-        $myIntegration = self::getIntegration($integration);
-
-        return $myIntegration && $myIntegration->getIntegrationSettings() && $myIntegration->getIntegrationSettings()->getIsPublished();
-    }
-
-    /**
-     * @return AbstractIntegration
-     */
-    private static function getIntegration($integration)
-    {
-        throw new \Exception('Deprecated');
-        try {
-            return self::$integrationHelper->getIntegrationObject($integration);
-        } catch (\Exception) {
-            // do nothing
-        }
-
-        return null;
-    }
-
-    /**
-     * @return mixed
-     */
-    private static function listToIntegration($listType): string
-    {
-        if (CitrixProducts::isValidValue($listType)) {
-            return 'Goto'.$listType;
-        }
-
-        return '';
-    }
-
-    /**
-     * @param string $str
-     * @param int    $limit
-     */
-    public static function getCleanString($str, $limit = 20): string
-    {
-        $str = htmlentities(strtolower($str), ENT_NOQUOTES, 'utf-8');
+        // Translate foreign characters to base characters
         $str = preg_replace('#&([A-za-z])(?:acute|cedil|caron|circ|grave|orn|ring|slash|th|tilde|uml);#', '\1', $str);
         $str = preg_replace('#&([A-za-z]{2})(?:lig);#', '\1', $str);
-        $str = preg_replace('#&[^;]+;#', '', $str);
+        $str = preg_replace('#&[^;]+;#', '', $str); // remove anything not already replaced
 
-        $availableChars = explode(' ', '0 1 2 3 4 5 6 7 8 9 a b c d e f g h i j k l m n o p q r s t u v w x y z');
-        $safeStr        = '';
-        $safeChar       = '';
-        /** @var array $chars */
-        $chars = str_split($str);
-        foreach ($chars as $char) {
-            if (!in_array($char, $availableChars, true)) {
-                if ('-' !== $safeChar) {
-                    $safeChar = '-';
-                } else {
-                    continue;
-                }
-            } else {
-                $safeChar = $char;
-            }
-            $safeStr .= $safeChar;
-        }
+        // Replace any non-letter/digit with '-', but avoid consecutive '-'.
+        $str = preg_replace('/[^a-z0-9]+/', '-', $str);
 
-        return trim(substr($safeStr, 0, $limit), '-');
+        // Trim and limit the string size
+        $str = trim($str, '-');
+        $str = substr($str, 0, $limit);
+        $str = rtrim($str, '-');
+
+        return $str;
     }
 
     /**
-     * @return string
-     *
-     * @throws \Symfony\Component\HttpKernel\Exception\BadRequestHttpException
-     */
-    public static function registerToProduct($product, $productId, $email, $firstname, $lastname)
-    {
-        throw new \Exception('Deprecated');
-
-        try {
-            $response = [];
-            if (CitrixProducts::GOTOWEBINAR === $product) {
-                $params = [
-                    'email'     => $email,
-                    'firstName' => $firstname,
-                    'lastName'  => $lastname,
-                ];
-                $response = self::getG2wApi()->request(
-                    'webinars/'.$productId.'/registrants?resendConfirmation=true',
-                    $params,
-                    'POST'
-                );
-            } elseif (CitrixProducts::GOTOTRAINING === $product) {
-                $params = [
-                    'email'     => $email,
-                    'givenName' => $firstname,
-                    'surname'   => $lastname,
-                ];
-                $response = self::getG2tApi()->request(
-                    'trainings/'.$productId.'/registrants',
-                    $params,
-                    'POST'
-                );
-            }
-
-            if (!is_array($response) || !array_key_exists('joinUrl', $response)) {          // response has key and registration url
-                throw new BadRequestHttpException('Unable to register!');
-            }
-
-            return $response['joinUrl'];
-        } catch (\Exception $ex) {
-            self::log('registerToProduct: '.$ex->getMessage());
-            throw new BadRequestHttpException($ex->getMessage());
-        }
-    }
-
-    /**
-     * @return bool
-     *
-     * @throws \Symfony\Component\HttpKernel\Exception\BadRequestHttpException
-     */
-    public static function startToProduct($product, $productId, $email, $firstname, $lastname)
-    {
-        throw new \Exception('Deprecated');
-
-        try {
-            if (CitrixProducts::GOTOMEETING === $product) {
-                $response = self::getG2mApi()->request(
-                    'meetings/'.$productId.'/start'
-                );
-
-                return (is_array($response) && array_key_exists('hostURL', $response)) ? $response['hostURL'] : '';
-            } elseif (CitrixProducts::GOTOTRAINING === $product) {
-                $response = self::getG2tApi()->request(
-                    'trainings/'.$productId.'/start'
-                );
-
-                return (is_array($response) && array_key_exists('hostURL', $response)) ? $response['hostURL'] : '';
-            } elseif (CitrixProducts::GOTOASSIST === $product) {
-                // TODO: use the sessioncallback to update attendance status
-                $router = self::$router;
-                $params = [
-                    'sessionStatusCallbackUrl' => $router
-                        ->generate(
-                            'mautic_citrix_sessionchanged',
-                            [],
-                            UrlGeneratorInterface::ABSOLUTE_URL
-                        ),
-                    'sessionType'      => 'screen_sharing',
-                    'partnerObject'    => '',
-                    'partnerObjectUrl' => '',
-                    'customerName'     => $firstname.' '.$lastname,
-                    'customerEmail'    => $email,
-                    'machineUuid'      => '',
-                ];
-                $response = self::getG2aApi()->request(
-                    'sessions',
-                    $params,
-                    'POST'
-                );
-
-                return (is_array($response)
-                    && array_key_exists(
-                        'startScreenSharing',
-                        $response
-                    )
-                    && array_key_exists(
-                        'launchUrl',
-                        $response['startScreenSharing']
-                    )) ? $response['startScreenSharing']['launchUrl'] : '';
-            }
-        } catch (\Exception $ex) {
-            self::log('startProduct: '.$ex->getMessage());
-            throw new BadRequestHttpException($ex->getMessage());
-        }
-
-        return '';
-    }
-
-    /**
-     * @param string $product
-     * @param string $productId
-     *
-     * @return string
-     *
-     * @throws \Mautic\PluginBundle\Exception\ApiErrorException
-     */
-    public static function getEventName($product, $productId)
-    {
-        throw new \Exception('Deprecated');
-
-        if (CitrixProducts::GOTOWEBINAR === $product) {
-            $result = self::getG2wApi()->request($product.'s/'.$productId);
-
-            return $result['subject'];
-        } elseif (CitrixProducts::GOTOMEETING === $product) {
-            $result = self::getG2mApi()->request($product.'s/'.$productId);
-
-            return $result[0]['subject'];
-        } elseif (CitrixProducts::GOTOTRAINING === $product) {
-            $result = self::getG2tApi()->request($product.'s/'.$productId);
-
-            return $result['name'];
-        }
-
-        return $productId;
-    }
-
-    /**
+     * @deprecated
      * @param string $product
      * @param string $productId
      *
@@ -445,6 +189,7 @@ class CitrixHelper
     }
 
     /**
+     * @deprecated
      * @param string $product
      * @param string $productId
      *
@@ -486,10 +231,7 @@ class CitrixHelper
         return self::extractContacts($result);
     }
 
-    /**
-     * @return array
-     */
-    protected static function extractContacts($results)
+    public static function extractContacts($results)
     {
         $contacts = [];
 

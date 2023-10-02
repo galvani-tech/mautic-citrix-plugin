@@ -1,4 +1,5 @@
-<?php declare(strict_types=1);
+<?php /** @noinspection PhpUndefinedVariableInspection */
+declare(strict_types=1);
 
 /*
  * @copyright   2016 Mautic Contributors. All rights reserved

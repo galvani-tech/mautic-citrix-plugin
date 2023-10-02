@@ -7,27 +7,19 @@ namespace MauticPlugin\MauticCitrixBundle\Form\Type;
 use Mautic\EmailBundle\Form\Type\EmailListType;
 use MauticPlugin\MauticCitrixBundle\Helper\CitrixHelper;
 use MauticPlugin\MauticCitrixBundle\Helper\CitrixProducts;
+use MauticPlugin\MauticCitrixBundle\Helper\CitrixServiceHelper;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
-/**
- * Class CitrixCampaignActionType.
- */
 class CitrixCampaignActionType extends AbstractType
 {
-    /**
-     * @var TranslatorInterface
-     */
-    protected $translator;
-
-    /**
-     * CitrixCampaignActionType constructor.
-     */
-    public function __construct(TranslatorInterface $translator)
+    public function __construct(
+        private CitrixServiceHelper $serviceHelper,
+        private TranslatorInterface $translator,
+    )
     {
-        $this->translator = $translator;
     }
 
     /**
@@ -41,7 +33,7 @@ class CitrixCampaignActionType extends AbstractType
     {
         if (!(array_key_exists('attr', $options) && array_key_exists('data-product', $options['attr']))
             || !CitrixProducts::isValidValue($options['attr']['data-product'])
-            || !CitrixHelper::isAuthorized('Goto'.$options['attr']['data-product'])
+            || !$this->serviceHelper->isIntegrationAuthorized($options['attr']['data-product'])
         ) {
             return;
         }
@@ -49,10 +41,10 @@ class CitrixCampaignActionType extends AbstractType
         $product = $options['attr']['data-product'];
 
         $choices = [
-            'webinar_register'     => $this->translator->trans('plugin.citrix.action.register.webinar'),
-            'meeting_start'        => $this->translator->trans('plugin.citrix.action.start.meeting'),
-            'training_register'    => $this->translator->trans('plugin.citrix.action.register.training'),
-            'training_start'       => $this->translator->trans('plugin.citrix.action.start.training'),
+            'webinar_register' => $this->translator->trans('plugin.citrix.action.register.webinar'),
+            'meeting_start' => $this->translator->trans('plugin.citrix.action.start.meeting'),
+            'training_register' => $this->translator->trans('plugin.citrix.action.register.training'),
+            'training_start' => $this->translator->trans('plugin.citrix.action.start.training'),
             'assist_screensharing' => $this->translator->trans('plugin.citrix.action.screensharing.assist'),
         ];
 
@@ -64,21 +56,21 @@ class CitrixCampaignActionType extends AbstractType
         }
 
         $builder->add(
-            'event-criteria-'.$product,
+            'event-criteria-' . $product,
             ChoiceType::class,
             [
-                'label'   => $this->translator->trans('plugin.citrix.action.criteria'),
+                'label' => $this->translator->trans('plugin.citrix.action.criteria'),
                 'choices' => array_flip($newChoices),
             ]
         );
 
         if (CitrixProducts::GOTOASSIST !== $product) {
             $builder->add(
-                $product.'-list',
+                $product . '-list',
                 ChoiceType::class,
                 [
-                    'label'    => $this->translator->trans('plugin.citrix.decision.'.$product.'.list'),
-                    'choices'  => array_flip(CitrixHelper::getCitrixChoices($product)),
+                    'label' => $this->translator->trans('plugin.citrix.decision.' . $product . '.list'),
+                    'choices' => array_flip($this->serviceHelper->getCitrixChoices($product)),
                     'multiple' => true,
                 ]
             );
@@ -89,14 +81,14 @@ class CitrixCampaignActionType extends AbstractType
             || in_array('assist_screensharing', $newChoices)
         ) {
             $defaultOptions = [
-                'label'      => 'plugin.citrix.emailtemplate',
+                'label' => 'plugin.citrix.emailtemplate',
                 'label_attr' => ['class' => 'control-label'],
-                'attr'       => [
-                    'class'   => 'form-control',
+                'attr' => [
+                    'class' => 'form-control',
                     'tooltip' => 'plugin.citrix.emailtemplate_descr',
                 ],
-                'required'   => true,
-                'multiple'   => false,
+                'required' => true,
+                'multiple' => false,
             ];
 
             if (array_key_exists('list_options', $options)) {
@@ -110,13 +102,5 @@ class CitrixCampaignActionType extends AbstractType
 
             $builder->add('template', EmailListType::class, $defaultOptions);
         }
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getBlockPrefix()
-    {
-        return 'citrix_campaign_action';
     }
 }
