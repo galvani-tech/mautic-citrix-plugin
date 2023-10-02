@@ -4,8 +4,13 @@ declare(strict_types=1);
 
 namespace MauticPlugin\MauticCitrixBundle\Model;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Mautic\CampaignBundle\Model\EventModel;
+use Mautic\CoreBundle\Helper\CoreParametersHelper;
+use Mautic\CoreBundle\Helper\UserHelper;
 use Mautic\CoreBundle\Model\FormModel;
+use Mautic\CoreBundle\Security\Permissions\CorePermissions;
+use Mautic\CoreBundle\Translation\Translator;
 use Mautic\LeadBundle\Entity\Lead;
 use Mautic\LeadBundle\Model\LeadModel;
 use MauticPlugin\MauticCitrixBundle\CitrixEvents;
@@ -18,6 +23,8 @@ use MauticPlugin\MauticCitrixBundle\Helper\CitrixProducts;
 use MauticPlugin\MauticCitrixBundle\Helper\CitrixServiceHelper;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 /**
  * Class CitrixModel.
@@ -27,18 +34,43 @@ class CitrixModel extends FormModel
     /** @var LoggerInterface $logger */
     protected $logger;
 
+//    public function __construct(
+//        private LeadModel           $leadModel,
+//        private CitrixServiceHelper $serviceHelper,
+//        protected EntityManagerInterface                   $em,
+//        LoggerInterface             $logger,
+//    )
+//    {
+//        $this->logger = $logger;
+//    }
+
+
     public function __construct(
-        private LeadModel           $leadModel,
-        private CitrixServiceHelper $serviceHelper,
-        LoggerInterface     $logger,
-    )
-    {
-        $this->logger = $logger;
+        EntityManagerInterface $em,
+        CorePermissions $security,
+        EventDispatcherInterface $dispatcher,
+        UrlGeneratorInterface $router,
+        Translator $translator,
+        UserHelper $userHelper,
+        LoggerInterface $mauticLogger,
+        CoreParametersHelper $coreParametersHelper,
+        protected CitrixServiceHelper $serviceHelper,
+    ) {
+        parent::__construct(
+            $em,
+            $security,
+            $dispatcher,
+            $router,
+            $translator,
+            $userHelper,
+            $mauticLogger,
+            $coreParametersHelper
+        );
     }
 
     public function getRepository(): CitrixEventRepository
     {
-        return $this->em->getRepository('MauticCitrixBundle:CitrixEvent');
+        return $this->em->getRepository(CitrixEvent::class);
     }
 
     /**

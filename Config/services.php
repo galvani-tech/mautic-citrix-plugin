@@ -18,6 +18,8 @@ return function (ContainerConfigurator $configurator) {
     $services->load('MauticPlugin\\MauticCitrixBundle\\EventListener\\', '../EventListener')
         ->tag('kernel.event_subscriber');
 
+    $services->load('MauticPlugin\\MauticCitrixBundle\\Entity\\', '../Entity/*Repository.php');
+
     $services->load('MauticPlugin\\MauticCitrixBundle\\', '../')
         ->exclude('../{'.implode(',', [...MauticCoreExtension::DEFAULT_EXCLUDES, ...$excludes]).'}');
 

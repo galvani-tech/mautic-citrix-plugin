@@ -9,7 +9,8 @@ use Mautic\PluginBundle\PluginEvents;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
- * Class StatsSubscriber.
+ * @todo this is no longer used
+ * @deprecated
  */
 class IntegrationRequestSubscriber implements EventSubscriberInterface
 {
@@ -23,9 +24,7 @@ class IntegrationRequestSubscriber implements EventSubscriberInterface
         ];
     }
 
-    /**
-     * @throws \Exception
-     */
+    /** @deprecated */
     public function getParameters(PluginIntegrationRequestEvent $requestEvent): void
     {
         if (str_contains($requestEvent->getUrl(), 'oauth/v2/token')) {
@@ -37,9 +36,7 @@ class IntegrationRequestSubscriber implements EventSubscriberInterface
         }
     }
 
-    /**
-     * @throws \Exception
-     */
+    /** @deprecated */
     private function getAuthorization(array $parameters): string
     {
         if (empty($parameters['client_id'])) {

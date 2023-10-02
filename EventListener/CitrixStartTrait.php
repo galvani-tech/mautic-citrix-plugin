@@ -12,17 +12,7 @@ use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 trait CitrixStartTrait
 {
-    /**
-     * @var EmailModel
-     */
-    protected $emailModel;
-
-    public function setEmailModel(EmailModel $emailModel): void
-    {
-        $this->emailModel = $emailModel;
-    }
-
-    public function startProduct(string $product, Lead $lead, array $productsToStart, ?int $emailId = null, ?int $actionId = null)
+    public function startProduct(string $product, Lead $lead, array $productsToStart, mixed $emailId = null, ?string $actionId = null)
     {
         $leadFields = $lead->getProfileFields();
         [$email, $firstname, $lastname] = [
@@ -61,7 +51,7 @@ trait CitrixStartTrait
                             ];
 
                             $button = $this->templating->render(
-                                'MauticCitrixBundle:SubscribedEvents\EmailToken:token.html.php',
+                                '@MauticCitrix/SubscribedEvents/EmailToken/token.html.twig',
                                 $params
                             );
                             $content = str_replace('{' . $product . '_button}', $button, $content);
@@ -76,7 +66,7 @@ trait CitrixStartTrait
                         $options = ['source' => ['trigger', $actionId]];
                         $this->emailModel->sendEmail($emailEntity, $leadFields, $options);
                     } else {
-                        throw new BadRequestHttpException('Unable to load emal template!');
+                        throw new BadRequestHttpException('Unable to load email template!');
                     }
 
                     // add event to DB

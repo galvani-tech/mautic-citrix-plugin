@@ -7,6 +7,7 @@ namespace MauticPlugin\MauticCitrixBundle\EventListener;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\EntityManager;
+use Mautic\EmailBundle\Model\EmailModel;
 use Mautic\FormBundle\Entity\Action;
 use Mautic\FormBundle\Entity\Field;
 use Mautic\FormBundle\Entity\Form;
@@ -48,6 +49,7 @@ class FormSubscriber implements EventSubscriberInterface
         private EntityManager $entityManager,
         private Environment $templating,
         private LoggerInterface $logger,
+        private EmailModel $emailModel,
     ) {
     }
 

@@ -76,10 +76,7 @@ class CitrixCampaignActionType extends AbstractType
             );
         }
 
-        if (in_array('meeting_start', $newChoices)
-            || in_array('training_start', $newChoices)
-            || in_array('assist_screensharing', $newChoices)
-        ) {
+        if (!empty(array_intersect_key($newChoices, array_flip(['meeting_start', 'training_start', 'assist_screensharing'])))) {
             $defaultOptions = [
                 'label' => 'plugin.citrix.emailtemplate',
                 'label_attr' => ['class' => 'control-label'],
