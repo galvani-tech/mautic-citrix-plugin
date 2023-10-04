@@ -171,6 +171,7 @@ class CitrixModel extends FormModel
         if (!CitrixProducts::isValidValue($product)) {
             return []; // is not a valid citrix product
         }
+
         $dql = sprintf(
             "SELECT DISTINCT(c.eventName) FROM MauticCitrixBundle:CitrixEvent c WHERE c.product='%s'",
             $product

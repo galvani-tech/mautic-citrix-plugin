@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace MauticPlugin\MauticCitrixBundle\Form\Type;
 
 use Mautic\IntegrationsBundle\Form\Type\NotBlankIfPublishedConstraintTrait;
+use Myproject\MyBundle\Form\TaskTypes\UserDataType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -23,10 +24,10 @@ class ConfigAuthType extends AbstractType
             'client_id',
             TextType::class,
             [
-                'label'      => 'mautic.integration.keyfield.clientid',
+                'label' => 'mautic.integration.keyfield.clientid',
                 'label_attr' => ['class' => 'control-label'],
-                'required'   => true,
-                'attr'       => [
+                'required' => true,
+                'attr' => [
                     'class' => 'form-control',
                 ],
                 'constraints' => [
@@ -39,16 +40,16 @@ class ConfigAuthType extends AbstractType
             'client_secret',
             PasswordType::class,
             [
-                'label'      => 'mautic.integration.keyfield.clientsecret',
+                'label' => 'mautic.integration.keyfield.clientsecret',
                 'label_attr' => ['class' => 'control-label'],
-                'required'   => false,
-                'attr'       => [
+                'required' => false,
+                'attr' => [
                     'class' => 'form-control',
                 ],
                 'constraints' => [
                     $this->getNotBlankConstraint(),
                 ],
-                'empty_data'  => $clientSecret,
+                'empty_data' => $clientSecret,
             ]
         );
     }

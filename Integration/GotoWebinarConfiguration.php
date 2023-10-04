@@ -17,15 +17,20 @@ use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\RouterInterface;
 
-class GotoMeetingConfiguration extends AbstractGotoConfiguration
+class GotoWebinarConfiguration extends AbstractGotoConfiguration
 {
     public function getApiUrl(): string
     {
-        return 'https://api.getgo.com/G2M/rest/';
+        return 'https://api.getgo.com/G2W/rest/v2/';
+    }
+
+    public function getApiV1Url(): string
+    {
+        return 'https://api.getgo.com/G2W/rest/';
     }
 
     protected function getIntegrationName(bool $displayName = false): string
     {
-        return $displayName ? GotomeetingIntegration::DISPLAY_NAME : GotomeetingIntegration::NAME;
+        return $displayName ? GotowebinarIntegration::DISPLAY_NAME : GotowebinarIntegration::NAME;
     }
 }

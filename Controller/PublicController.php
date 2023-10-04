@@ -24,6 +24,7 @@ class PublicController extends CommonController
      */
     public function proxyAction(Request $request)
     {
+        throw new \Exception('Gototraining is not implemented');
         $url = $request->query->get('url', null);
         if (!$url) {
             return $this->accessDenied(false, 'ERROR: url not specified');
@@ -88,6 +89,8 @@ class PublicController extends CommonController
      */
     public function sessionChangedAction(Request $request)
     {
+        throw new \Exception('Gototraining is not implemented');
+
         /** @var IntegrationHelper $integrationHelper */
         $integrationHelper = $this->get('mautic.helper.integration');
         $myIntegration     = $integrationHelper->getIntegrationObject('Gototraining');

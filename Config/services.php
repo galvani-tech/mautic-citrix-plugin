@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Mautic\CoreBundle\DependencyInjection\MauticCoreExtension;
 use MauticPlugin\MauticCitrixBundle\Integration\GotoMeetingConfiguration;
+use MauticPlugin\MauticCitrixBundle\Integration\GotoWebinarConfiguration;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 
 return function (ContainerConfigurator $configurator) {
@@ -24,4 +25,5 @@ return function (ContainerConfigurator $configurator) {
         ->exclude('../{'.implode(',', [...MauticCoreExtension::DEFAULT_EXCLUDES, ...$excludes]).'}');
 
     $services->alias('mautic.gotomeeting.configuration', GotoMeetingConfiguration::class);
+    $services->alias('mautic.gotowebinar.configuration', GotoWebinarConfiguration::class);
 };

@@ -9,14 +9,16 @@ use Mautic\IntegrationsBundle\Integration\Interfaces\ConfigFormAuthInterface;
 use Mautic\IntegrationsBundle\Integration\Interfaces\ConfigFormAuthorizeButtonInterface;
 use Mautic\IntegrationsBundle\Integration\Interfaces\ConfigFormCallbackInterface;
 use Mautic\IntegrationsBundle\Integration\Interfaces\ConfigFormInterface;
+use MauticPlugin\MauticCitrixBundle\Form\Type\ConfigAuthType;
 use MauticPlugin\MauticCitrixBundle\Integration\GotomeetingIntegration;
+use MauticPlugin\MauticCitrixBundle\Integration\GotowebinarIntegration;
 
 /**
  * This configures the UI for the plugin's configuration page.  The form is defined in the
  * {@see DetailsType}.
  */
-class GotomeetingIntegrationFormSupport
-    extends GotomeetingIntegration
+class GotowebinarIntegrationFormSupport
+    extends GotowebinarIntegration
     implements
     ConfigFormInterface,
     ConfigFormAuthInterface,

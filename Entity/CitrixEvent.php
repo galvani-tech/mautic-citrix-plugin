@@ -8,37 +8,53 @@ use Doctrine\ORM\Mapping as ORM;
 use Mautic\CoreBundle\Doctrine\Mapping\ClassMetadataBuilder;
 use Mautic\LeadBundle\Entity\Lead;
 
-#[ORM\Entity]
-#[ORM\Table(name: 'plugin_citrix_events')]
+/**
+ * @ORM\Table(name="plugin_citrix_events")
+ * @ORM\Entity
+ */
 class CitrixEvent
 {
-    #[ORM\Column(name: 'id', type: \Doctrine\DBAL\Types\Types::INTEGER)]
-    #[ORM\Id]
-    #[ORM\GeneratedValue(strategy: 'AUTO')]
-    protected ?int $id = null;
+    /**
+     * @ORM\Column(name="id", type="integer")
+     * @ORM\Id
+     * @ORM\GeneratedValue(strategy="AUTO")
+     */
+    protected $id;
 
     /**
      * @var Lead
      */
     protected $lead;
 
-    #[ORM\Column(name: 'product', type: \Doctrine\DBAL\Types\Types::STRING, length: 20)]
-    protected ?string $product = 'undefined';
+    /**
+     * @ORM\Column(name="product", type="string", length=20)
+     */
+    protected $product = 'undefined';
 
-    #[ORM\Column(name: 'email', type: \Doctrine\DBAL\Types\Types::STRING, length: 255)]
-    protected ?string $email = 'undefined';
+    /**
+     * @ORM\Column(name="email", type="string", length=255)
+     */
+    protected $email = 'undefined';
 
-    #[ORM\Column(name: 'event_name', type: \Doctrine\DBAL\Types\Types::STRING, length: 255)]
-    protected ?string $eventName = 'undefined';
+    /**
+     * @ORM\Column(name="event_name", type="string", length=255)
+     */
+    protected $eventName = 'undefined';
 
-    #[ORM\Column(name: 'event_desc', type: \Doctrine\DBAL\Types\Types::STRING, length: 255)]
-    protected ?string $eventDesc = 'undefined';
+    /**
+     * @ORM\Column(name="event_desc", type="string", length=255)
+     */
+    protected $eventDesc = 'undefined';
 
-    #[ORM\Column(name: 'event_type', type: \Doctrine\DBAL\Types\Types::STRING, length: 50)]
-    protected ?string $eventType = 'undefined';
+    /**
+     * @ORM\Column(name="event_type", type="string", length=50)
+     */
+    protected $eventType = 'undefined';
 
-    #[ORM\Column(name: 'event_date', type: \Doctrine\DBAL\Types\Types::DATETIME_MUTABLE)]
-    protected ?\DateTimeInterface $eventDate = null;
+    /**
+     * @ORM\Column(name="event_date", type="datetime")
+     */
+    protected $eventDate;
 
     public function __construct()
     {

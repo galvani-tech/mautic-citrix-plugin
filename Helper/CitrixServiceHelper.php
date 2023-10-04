@@ -8,6 +8,8 @@ use Mautic\IntegrationsBundle\Exception\IntegrationNotFoundException;
 use Mautic\PluginBundle\Exception\ApiErrorException;
 use MauticPlugin\MauticCitrixBundle\Integration\GotoMeetingConfiguration;
 use MauticPlugin\MauticCitrixBundle\Integration\GotomeetingIntegration;
+use MauticPlugin\MauticCitrixBundle\Integration\GotoWebinarConfiguration;
+use MauticPlugin\MauticCitrixBundle\Integration\GotowebinarIntegration;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -18,6 +20,7 @@ class CitrixServiceHelper
 {
     public function __construct(
         private GotoMeetingConfiguration $gotoMeetingConfiguration,
+        private GotoWebinarConfiguration $gotoWebinarConfiguration,
         private RouterInterface          $router,
         private LoggerInterface          $logger,
     )
@@ -36,38 +39,97 @@ class CitrixServiceHelper
     }
 
     //  this should be just proxy to the integration's client, for now it does the job
-    public function getCitrixChoices(string $product, bool $onlyUpcoming = true)
+
+    /**
+     * @param string $product
+     * @param bool $onlyUpcoming
+     * @return array<string,string>
+     * @throws ApiErrorException
+     * @throws IntegrationNotFoundException
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @throws \Mautic\IntegrationsBundle\Exception\PluginNotConfiguredException
+     * @throws \GuzzleHttp\Exception\ClientException
+     */
+    public function getCitrixChoices(string $product, bool $onlyUpcoming = true): array
     {
         $config = $this->getIntegrationConfig($product);
         $client = $config->getHttpClient();
-        $endpointUri = $onlyUpcoming ? 'upcomingMeetings' : 'historicalMeetings';
-        $response = $client->get($config->getApiUrl() . $endpointUri);
+
+        $organizerKey = $config->getUserData()['id'] ?? null;
+
+        if ($organizerKey === null) {
+            throw new BadRequestHttpException('Unable to get user data!');
+        }
+        /**
+         * webinar endpoint https://api.getgo.com/G2W/rest/v2/
+         * https://api.getgo.com/G2W/rest/v2/organizers/{organizerKey}/webinars
+         */
+        $onlyUpcoming = false;
+        $endpointUri = match ($product) {
+            GotomeetingIntegration::GOTO_PRODUCT_NAME => $onlyUpcoming ? 'upcomingMeetings' : 'historicalMeetings', // v1
+            GotowebinarIntegration::GOTO_PRODUCT_NAME => '/organizers/{organizerKey}/webinars', // v2
+        };
+
+        $replacements = [
+            '{organizerKey}' => $organizerKey,
+        ];
+
+        $endpointUri = str_replace(array_keys($replacements), array_values($replacements), $endpointUri);
+
+        $dateFormat = match ($product) {
+            GotomeetingIntegration::GOTO_PRODUCT_NAME => 'Y-m-d\TH:i:s\Z',
+            GotowebinarIntegration::GOTO_PRODUCT_NAME => 'c',
+        };
+
+        $UTCZone = new \DateTimeZone('UTC');
+
+        $parameters = match ($product) {
+            GotomeetingIntegration::GOTO_PRODUCT_NAME => [
+                'startDate' => $onlyUpcoming ? (new \DateTimeImmutable('now', $UTCZone))->format($dateFormat) : (new \DateTimeImmutable('-10 year', $UTCZone))->format($dateFormat),
+                'endDate' => (new \DateTimeImmutable('+10 year', $UTCZone))->format($dateFormat),
+            ],
+            GotowebinarIntegration::GOTO_PRODUCT_NAME => [
+                'fromTime' => $onlyUpcoming ? (new \DateTimeImmutable('now', $UTCZone))->format($dateFormat) : (new \DateTimeImmutable('-10 year', $UTCZone))->format($dateFormat),
+                'toTime' => (new \DateTimeImmutable('+10 year', $UTCZone))->format($dateFormat),
+            ],
+        };
+
+        //$response = $client->get($config->getApiUrl() . $endpointUri . '?' . http_build_query($parameters));
+        $response = $client->get($config->getApiUrl() . $endpointUri, ['query' => $parameters]);
+
         $parsed = $this->parseResponse($response);
-        return array_combine(array_column($parsed, 'meetingId'), array_column($parsed, 'subject'));
+
+        $list = match ($product) {
+            GotomeetingIntegration::GOTO_PRODUCT_NAME => array_combine(
+                array_column($parsed, 'meetingId'),
+                array_column($parsed, 'subject'),
+            ),
+            GotowebinarIntegration::GOTO_PRODUCT_NAME => array_combine(
+                array_column($parsed['_embedded']['webinars'] ?? [], 'webinarId'),
+                array_column($parsed['_embedded']['webinars'] ?? [], 'subject'),
+            ),
+        };
+
+        return $list;
     }
 
+    //  Currently supports only webinar, training is not implemented
     public function registerToProduct($product, $productId, $email, $firstname, $lastname): string
     {
         $config = $this->getIntegrationConfig($product);
         $client = $config->getHttpClient();
 
         $params = match ($product) {
-            GotomeetingIntegration::GOTO_PRODUCT_NAME => [
+            GotowebinarIntegration::GOTO_PRODUCT_NAME => [
                 'email' => $email,
                 'firstName' => $firstname,
                 'lastName' => $lastname,
-            ],
-            CitrixProducts::GOTOTRAINING => [
-                'email' => $email,
-                'givenName' => $firstname,
-                'surname' => $lastname,
             ],
             default => throw new BadRequestHttpException(sprintf('This action is not available for product %s.', $product))
         };
 
         $apiUrl = match ($product) {
             GotomeetingIntegration::GOTO_PRODUCT_NAME => '/webinars/' . $productId . '/registrants?resendConfirmation=true',
-            CitrixProducts::GOTOTRAINING => '/trainings/' . $productId . '/registrants',
         };
 
         try {
@@ -123,19 +185,27 @@ class CitrixServiceHelper
         }
     }
 
-    public function getRegistrants(string $product, string $productId)
+    public function getRegistrants(string $product, mixed $productId)
     {
         $config = $this->getIntegrationConfig($product);
         $client = $config->getHttpClient();
 
         $path = match ($product) {
-            CitrixProducts::GOTOWEBINAR, CitrixProducts::GOTOTRAINING => $product . 's/' . $productId . '/registrants',
+            CitrixProducts::GOTOWEBINAR => 'organizers/{organizerKey}/webinars/{webinarKey}/registrants',
+            CitrixProducts::GOTOTRAINING => $product . 's/' . $productId . '/registrants',
             default => throw new \InvalidArgumentException("Invalid product: $product"),
         };
 
+        $replacements = [
+            '{organizerKey}' => $config->getUserData()['id'] ?? null,
+            '{webinarKey}' => $productId,
+        ];
+
+        $path = str_replace(array_keys($replacements), array_values($replacements), $path);
+
         $result = $client->request('GET', $path);
 
-        return CitrixHelper::extractContacts($result);
+        return CitrixHelper::extractContacts($this->parseResponse($result));
     }
 
     public function getAttendees($product, $productId)
@@ -143,23 +213,58 @@ class CitrixServiceHelper
         $config = $this->getIntegrationConfig($product);
         $client = $config->getHttpClient();
 
-        $endpoint = $product . 's/' . $productId;
-
-        $returnData = match ($product) {
-            CitrixProducts::GOTOWEBINAR, CitrixProducts::GOTOMEETING => $client->request($endpoint . '/attendees'),
-            CitrixProducts::GOTOTRAINING => array_merge_recursive(
-                ...(array_map(fn ($session) => $client->request('sessions/' . $session . '/attendees', [], 'GET', 'rest/reports'), array_column($client->request($endpoint, [], 'GET', 'rest/reports'), 'sessionKey'))),
-            ),
+        //  the api v1 is a hack, the same endpoint on v2 returns 403, it works for registrants though
+        $path = match ($product) {
+            CitrixProducts::GOTOWEBINAR => $config->getApiV1Url().'organizers/{organizerKey}/webinars/{productKey}/attendees',
+            CitrixProducts::GOTOMEETING => 'meetings/{productKey}/attendees',
             default => throw new BadRequestHttpException(sprintf('This action is not available for product %s.', $product))
         };
 
-        return CitrixHelper::extractContacts($returnData);
+        $replacements = [
+            '{organizerKey}' => $config->getUserData()['id'] ?? null,
+            '{productKey}' => $productId,
+        ];
+
+        $path = str_replace(array_keys($replacements), array_values($replacements), $path);
+
+        return CitrixHelper::extractContacts($this->parseResponse($client->get($path)));
+    }
+
+    public function mergeWithFutureEvents($choices, $product)
+    {
+        $events = $this->getCitrixChoices($product);
+        foreach ($events as $key => $event) {
+            foreach ($choices as $eventId => $eventname) {
+                if (false !== strpos($eventId, '_#' . $key)) {
+                    continue 2;
+                }
+            }
+            $choices[CitrixHelper::getCleanString($event) . '_#' . $key] = $event;
+        }
+
+        return $choices;
+    }
+
+    public function appendStartDateTimeToEventName($listType, array $eventNames = [])
+    {
+        $choices = $this->getCitrixChoices($listType, false);
+
+        foreach ($eventNames as $eventName => $eventDesc) {
+            // filter events with same id
+            $eventDetails = explode('_#', $eventName);
+            if (isset($eventDetails[1]) && isset($choices[$eventDetails[1]])) {
+                $eventNames[$eventName] = $choices[$eventDetails[1]];
+            }
+        }
+
+        return $eventNames;
     }
 
     private function getIntegrationConfig(string $productName)
     {
         return match ($productName) {
             GotomeetingIntegration::GOTO_PRODUCT_NAME => $this->gotoMeetingConfiguration,
+            GotowebinarIntegration::GOTO_PRODUCT_NAME => $this->gotoWebinarConfiguration,
             default => throw new IntegrationNotFoundException(sprintf('Integration %s not found', $productName)),
         };
     }

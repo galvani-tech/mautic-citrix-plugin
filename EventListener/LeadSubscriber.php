@@ -113,9 +113,10 @@ class LeadSubscriber implements EventSubscriberInterface
      * @throws \Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException
      * @throws \InvalidArgumentException
      */
-    public function onListChoicesGenerate(LeadListFiltersChoicesEvent $event): void
+    public function onListChoicesGenerate(LeadListFiltersChoicesEvent $event)
     {
-        if (!str_contains($event->getRoute(), 'mautic_segment_action')) {
+        $action = $event->getRequest() ? $event->getRequest()->attributes->get('action') : null;
+        if (false === strpos($event->getRoute() ?? '', 'mautic_segment_action') && 'loadSegmentFilterForm' !== $action) {
             return;
         }
 
@@ -125,26 +126,31 @@ class LeadSubscriber implements EventSubscriberInterface
                 $activeProducts[] = $p;
             }
         }
-        if ([] === $activeProducts) {
+        if (0 === count($activeProducts)) {
             return;
         }
 
         foreach ($activeProducts as $product) {
-            $eventNames = $this->model->getDistinctEventNamesDesc($product);
-
-            $eventNamesWithoutAny = array_merge(
-                [
-                    '-' => '-',
-                ],
-                $eventNames
+            $eventNames           = $this->model->getDistinctEventNamesDesc($product);
+            $eventNames           = $this->serviceHelper->mergeWithFutureEvents($eventNames, $product);
+            $eventNames           = $this->serviceHelper->appendStartDateTimeToEventName($product, $eventNames);
+            $eventNamesWithoutAny = array_flip(
+                array_merge(
+                    [
+                        '-' => '-',
+                    ],
+                    $eventNames
+                )
             );
 
-            $eventNamesWithAny = array_merge(
-                [
-                    '-'   => '-',
-                    'any' => $this->translator->trans('plugin.citrix.event.'.$product.'.any'),
-                ],
-                $eventNames
+            $eventNamesWithAny = array_flip(
+                array_merge(
+                    [
+                        '-'   => '-',
+                        'any' => $this->translator->trans('plugin.citrix.event.'.$product.'.any'),
+                    ],
+                    $eventNames
+                )
             );
 
             if (in_array($product, [CitrixProducts::GOTOWEBINAR, CitrixProducts::GOTOTRAINING])) {
@@ -219,7 +225,7 @@ class LeadSubscriber implements EventSubscriberInterface
         $alias             = $event->getAlias();
         $func              = $event->getFunc();
         $currentFilter     = $details['field'];
-        $citrixEventsTable = $em->getClassMetadata('MauticCitrixBundle:CitrixEvent')->getTableName();
+        $citrixEventsTable = $em->getClassMetadata(CitrixEvent::class)->getTableName();
 
         foreach ($activeProducts as $product) {
             $eventFilters = [$product.'-registration', $product.'-attendance', $product.'-no-attendance'];
@@ -258,7 +264,7 @@ class LeadSubscriber implements EventSubscriberInterface
                         );
                     }
 
-                    if ($leadId !== 0) {
+                    if (isset($leadId) && $leadId > 0) {
                         $query->andWhere(
                             $query->expr()->eq($alias.$k.'.lead_id', $leadId)
                         );
