@@ -10,7 +10,6 @@ use Mautic\LeadBundle\Event\LeadTimelineEvent;
 use Mautic\LeadBundle\LeadEvents;
 use MauticPlugin\MauticCitrixBundle\Entity\CitrixEvent;
 use MauticPlugin\MauticCitrixBundle\Entity\CitrixEventTypes;
-use MauticPlugin\MauticCitrixBundle\Helper\CitrixHelper;
 use MauticPlugin\MauticCitrixBundle\Helper\CitrixProducts;
 use MauticPlugin\MauticCitrixBundle\Helper\CitrixServiceHelper;
 use MauticPlugin\MauticCitrixBundle\Model\CitrixModel;
@@ -23,7 +22,7 @@ class LeadSubscriber implements EventSubscriberInterface
         private CitrixModel $model,
         private TranslatorInterface $translator,
         private CitrixServiceHelper $serviceHelper,
-    ){
+    ) {
     }
 
     /**

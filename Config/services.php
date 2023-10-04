@@ -14,7 +14,7 @@ return function (ContainerConfigurator $configurator) {
         ->autoconfigure()
         ->public();
 
-    $excludes = ['Integration/Auth', 'Docs', 'Event', 'Entity' ];
+    $excludes = ['Integration/Auth', 'Docs', 'Event', 'Entity'];
 
     $services->load('MauticPlugin\\MauticCitrixBundle\\EventListener\\', '../EventListener')
         ->tag('kernel.event_subscriber');

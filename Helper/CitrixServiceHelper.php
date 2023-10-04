@@ -21,16 +21,16 @@ class CitrixServiceHelper
     public function __construct(
         private GotoMeetingConfiguration $gotoMeetingConfiguration,
         private GotoWebinarConfiguration $gotoWebinarConfiguration,
-        private RouterInterface          $router,
-        private LoggerInterface          $logger,
-    )
-    {
+        private RouterInterface $router,
+        private LoggerInterface $logger,
+    ) {
     }
 
     public function isIntegrationAuthorized($productName): bool
     {
         try {
             $integration = $this->getIntegrationConfig($productName);
+
             return $integration->isPublished();
         } catch (IntegrationNotFoundException) {
         }
@@ -41,9 +41,8 @@ class CitrixServiceHelper
     //  this should be just proxy to the integration's client, for now it does the job
 
     /**
-     * @param string $product
-     * @param bool $onlyUpcoming
      * @return array<string,string>
+     *
      * @throws ApiErrorException
      * @throws IntegrationNotFoundException
      * @throws \GuzzleHttp\Exception\GuzzleException
@@ -57,15 +56,15 @@ class CitrixServiceHelper
 
         $organizerKey = $config->getUserData()['id'] ?? null;
 
-        if ($organizerKey === null) {
+        if (null === $organizerKey) {
             throw new BadRequestHttpException('Unable to get user data!');
         }
         /**
          * webinar endpoint https://api.getgo.com/G2W/rest/v2/
-         * https://api.getgo.com/G2W/rest/v2/organizers/{organizerKey}/webinars
+         * https://api.getgo.com/G2W/rest/v2/organizers/{organizerKey}/webinars.
          */
         $onlyUpcoming = false;
-        $endpointUri = match ($product) {
+        $endpointUri  = match ($product) {
             GotomeetingIntegration::GOTO_PRODUCT_NAME => $onlyUpcoming ? 'upcomingMeetings' : 'historicalMeetings', // v1
             GotowebinarIntegration::GOTO_PRODUCT_NAME => '/organizers/{organizerKey}/webinars', // v2
         };
@@ -86,16 +85,16 @@ class CitrixServiceHelper
         $parameters = match ($product) {
             GotomeetingIntegration::GOTO_PRODUCT_NAME => [
                 'startDate' => $onlyUpcoming ? (new \DateTimeImmutable('now', $UTCZone))->format($dateFormat) : (new \DateTimeImmutable('-10 year', $UTCZone))->format($dateFormat),
-                'endDate' => (new \DateTimeImmutable('+10 year', $UTCZone))->format($dateFormat),
+                'endDate'   => (new \DateTimeImmutable('+10 year', $UTCZone))->format($dateFormat),
             ],
             GotowebinarIntegration::GOTO_PRODUCT_NAME => [
                 'fromTime' => $onlyUpcoming ? (new \DateTimeImmutable('now', $UTCZone))->format($dateFormat) : (new \DateTimeImmutable('-10 year', $UTCZone))->format($dateFormat),
-                'toTime' => (new \DateTimeImmutable('+10 year', $UTCZone))->format($dateFormat),
+                'toTime'   => (new \DateTimeImmutable('+10 year', $UTCZone))->format($dateFormat),
             ],
         };
 
-        //$response = $client->get($config->getApiUrl() . $endpointUri . '?' . http_build_query($parameters));
-        $response = $client->get($config->getApiUrl() . $endpointUri, ['query' => $parameters]);
+        // $response = $client->get($config->getApiUrl() . $endpointUri . '?' . http_build_query($parameters));
+        $response = $client->get($config->getApiUrl().$endpointUri, ['query' => $parameters]);
 
         $parsed = $this->parseResponse($response);
 
@@ -121,19 +120,19 @@ class CitrixServiceHelper
 
         $params = match ($product) {
             GotowebinarIntegration::GOTO_PRODUCT_NAME => [
-                'email' => $email,
+                'email'     => $email,
                 'firstName' => $firstname,
-                'lastName' => $lastname,
+                'lastName'  => $lastname,
             ],
             default => throw new BadRequestHttpException(sprintf('This action is not available for product %s.', $product))
         };
 
         $apiUrl = match ($product) {
-            GotomeetingIntegration::GOTO_PRODUCT_NAME => '/webinars/' . $productId . '/registrants?resendConfirmation=true',
+            GotomeetingIntegration::GOTO_PRODUCT_NAME => '/webinars/'.$productId.'/registrants?resendConfirmation=true',
         };
 
         try {
-            $response = $client->post($config->getApiUrl() . $apiUrl, [
+            $response = $client->post($config->getApiUrl().$apiUrl, [
                 'json' => $params,
             ]);
         } catch (\Exception $e) {
@@ -158,19 +157,19 @@ class CitrixServiceHelper
             switch ($product) {
                 case CitrixProducts::GOTOMEETING:
                 case CitrixProducts::GOTOTRAINING:
-                    $path = CitrixProducts::GOTOMEETING === $product ? 'meetings' : 'trainings';
+                    $path     = CitrixProducts::GOTOMEETING === $product ? 'meetings' : 'trainings';
                     $response = $this->parseResponse($client->get("{$path}/{$productId}/start"));
 
                     return $response['hostURL'] ?? '';
                 case CitrixProducts::GOTOASSIST:
                     $params = [
                         'sessionStatusCallbackUrl' => $this->router->generate('mautic_citrix_sessionchanged', [], UrlGeneratorInterface::ABSOLUTE_URL),
-                        'sessionType' => 'screen_sharing',
-                        'partnerObject' => '',
-                        'partnerObjectUrl' => '',
-                        'customerName' => "{$firstname} {$lastname}",
-                        'customerEmail' => $email,
-                        'machineUuid' => '',
+                        'sessionType'              => 'screen_sharing',
+                        'partnerObject'            => '',
+                        'partnerObjectUrl'         => '',
+                        'customerName'             => "{$firstname} {$lastname}",
+                        'customerEmail'            => $email,
+                        'machineUuid'              => '',
                     ];
 
                     $response = $this->parseResponse($client->post('sessions', $params));
@@ -180,7 +179,7 @@ class CitrixServiceHelper
                     throw new BadRequestHttpException(sprintf('This action is not available for product %s.', $product));
             }
         } catch (\Exception $ex) {
-            $this->logger->error('startProduct: ' . $ex->getMessage());
+            $this->logger->error('startProduct: '.$ex->getMessage());
             throw new BadRequestHttpException($ex->getMessage());
         }
     }
@@ -191,14 +190,14 @@ class CitrixServiceHelper
         $client = $config->getHttpClient();
 
         $path = match ($product) {
-            CitrixProducts::GOTOWEBINAR => 'organizers/{organizerKey}/webinars/{webinarKey}/registrants',
-            CitrixProducts::GOTOTRAINING => $product . 's/' . $productId . '/registrants',
-            default => throw new \InvalidArgumentException("Invalid product: $product"),
+            CitrixProducts::GOTOWEBINAR  => 'organizers/{organizerKey}/webinars/{webinarKey}/registrants',
+            CitrixProducts::GOTOTRAINING => $product.'s/'.$productId.'/registrants',
+            default                      => throw new \InvalidArgumentException("Invalid product: $product"),
         };
 
         $replacements = [
             '{organizerKey}' => $config->getUserData()['id'] ?? null,
-            '{webinarKey}' => $productId,
+            '{webinarKey}'   => $productId,
         ];
 
         $path = str_replace(array_keys($replacements), array_values($replacements), $path);
@@ -217,12 +216,12 @@ class CitrixServiceHelper
         $path = match ($product) {
             CitrixProducts::GOTOWEBINAR => $config->getApiV1Url().'organizers/{organizerKey}/webinars/{productKey}/attendees',
             CitrixProducts::GOTOMEETING => 'meetings/{productKey}/attendees',
-            default => throw new BadRequestHttpException(sprintf('This action is not available for product %s.', $product))
+            default                     => throw new BadRequestHttpException(sprintf('This action is not available for product %s.', $product))
         };
 
         $replacements = [
             '{organizerKey}' => $config->getUserData()['id'] ?? null,
-            '{productKey}' => $productId,
+            '{productKey}'   => $productId,
         ];
 
         $path = str_replace(array_keys($replacements), array_values($replacements), $path);
@@ -235,11 +234,11 @@ class CitrixServiceHelper
         $events = $this->getCitrixChoices($product);
         foreach ($events as $key => $event) {
             foreach ($choices as $eventId => $eventname) {
-                if (false !== strpos($eventId, '_#' . $key)) {
+                if (false !== strpos($eventId, '_#'.$key)) {
                     continue 2;
                 }
             }
-            $choices[CitrixHelper::getCleanString($event) . '_#' . $key] = $event;
+            $choices[CitrixHelper::getCleanString($event).'_#'.$key] = $event;
         }
 
         return $choices;
@@ -265,21 +264,23 @@ class CitrixServiceHelper
         return match ($productName) {
             GotomeetingIntegration::GOTO_PRODUCT_NAME => $this->gotoMeetingConfiguration,
             GotowebinarIntegration::GOTO_PRODUCT_NAME => $this->gotoWebinarConfiguration,
-            default => throw new IntegrationNotFoundException(sprintf('Integration %s not found', $productName)),
+            default                                   => throw new IntegrationNotFoundException(sprintf('Integration %s not found', $productName)),
         };
     }
 
     /**
-     * TODO improve, check for more codes and handle more exceptions
+     * TODO improve, check for more codes and handle more exceptions.
+     *
      * @return array<string,string>|null
+     *
      * @throws ApiErrorException
      */
     private function parseResponse(ResponseInterface $response)
     {
         try {
             $responseData = match ($response->getStatusCode()) {
-                200 => json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR),
-                204 => null,
+                200     => json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR),
+                204     => null,
                 default => throw new ApiErrorException($response->getReasonPhrase(), $response->getStatusCode()),
             };
         } catch (\JsonException $e) {

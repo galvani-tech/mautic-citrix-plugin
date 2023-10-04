@@ -5,16 +5,12 @@ declare(strict_types=1);
 namespace MauticPlugin\MauticCitrixBundle\Helper;
 
 use Mautic\PluginBundle\Helper\IntegrationHelper;
-use Mautic\PluginBundle\Integration\AbstractIntegration;
 use MauticPlugin\MauticCitrixBundle\Api\GotoassistApi;
 use MauticPlugin\MauticCitrixBundle\Api\GotomeetingApi;
 use MauticPlugin\MauticCitrixBundle\Api\GototrainingApi;
 use MauticPlugin\MauticCitrixBundle\Api\GotowebinarApi;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\RouterInterface;
-use Symfony\Component\Security\Core\Exception\AuthenticationException;
 
 class CitrixHelper
 {
@@ -40,7 +36,7 @@ class CitrixHelper
     {
         static $g2mapi;
         if (null === $g2mapi) {
-            $class  = '\\'. GotomeetingApi::class;
+            $class  = '\\'.GotomeetingApi::class;
             $g2mapi = new $class(self::getIntegration('Gotomeeting'));
         }
 
@@ -56,7 +52,7 @@ class CitrixHelper
     {
         static $g2wapi;
         if (null === $g2wapi) {
-            $class  = '\\'. GotowebinarApi::class;
+            $class  = '\\'.GotowebinarApi::class;
             $g2wapi = new $class(self::getIntegration('Gotowebinar'));
         }
 
@@ -72,7 +68,7 @@ class CitrixHelper
     {
         static $g2tapi;
         if (null === $g2tapi) {
-            $class  = '\\'. GototrainingApi::class;
+            $class  = '\\'.GototrainingApi::class;
             $g2tapi = new $class(self::getIntegration('Gototraining'));
         }
 
@@ -88,7 +84,7 @@ class CitrixHelper
     {
         static $g2aapi;
         if (null === $g2aapi) {
-            $class  = '\\'. GotoassistApi::class;
+            $class  = '\\'.GotoassistApi::class;
             $g2aapi = new $class(self::getIntegration('Gotoassist'));
         }
 
@@ -97,6 +93,7 @@ class CitrixHelper
 
     /**
      * @deprecated
+     *
      * @param string $level
      */
     public static function log($msg, $level = 'error'): void
@@ -163,6 +160,7 @@ class CitrixHelper
 
     /**
      * @deprecated
+     *
      * @param string $product
      * @param string $productId
      *
@@ -173,7 +171,6 @@ class CitrixHelper
     public static function getRegistrants($product, $productId)
     {
         throw new \Exception('Deprecated');
-
         $result = [];
         switch ($product) {
             case CitrixProducts::GOTOWEBINAR:
@@ -190,6 +187,7 @@ class CitrixHelper
 
     /**
      * @deprecated
+     *
      * @param string $product
      * @param string $productId
      *
@@ -200,7 +198,6 @@ class CitrixHelper
     public static function getAttendees($product, $productId)
     {
         throw new \Exception('Deprecated');
-
         $result = [];
         switch ($product) {
             case CitrixProducts::GOTOWEBINAR:

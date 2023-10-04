@@ -24,7 +24,6 @@ use Mautic\PluginBundle\PluginEvents;
 use MauticPlugin\MauticCitrixBundle\CitrixEvents;
 use MauticPlugin\MauticCitrixBundle\Form\Type\CitrixActionType;
 use MauticPlugin\MauticCitrixBundle\Form\Type\CitrixListType;
-use MauticPlugin\MauticCitrixBundle\Helper\CitrixHelper;
 use MauticPlugin\MauticCitrixBundle\Helper\CitrixProducts;
 use MauticPlugin\MauticCitrixBundle\Helper\CitrixServiceHelper;
 use MauticPlugin\MauticCitrixBundle\Model\CitrixModel;
@@ -472,7 +471,7 @@ class FormSubscriber implements EventSubscriberInterface
                 'formType' => CitrixListType::class,
                 'template' => '@MauticCitrix/Field/citrixlist.html.twig',
                 'listType' => $product,
-                'list' => $this->serviceHelper->getCitrixChoices($product),
+                'list'     => $this->serviceHelper->getCitrixChoices($product),
             ]);
 
             $event->addValidator('plugin.citrix.validate.'.$product, [

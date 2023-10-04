@@ -13,7 +13,6 @@ use Mautic\IntegrationsBundle\Integration\Interfaces\IntegrationInterface;
 use Mautic\PluginBundle\Exception\ApiErrorException;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\HttpFoundation\Session\Attribute\AttributeBag;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 // It is funny as everywhere ::NAME is used but PluginBundle just uses the class name instead
@@ -26,11 +25,10 @@ abstract class AbstractGotoIntegration implements IntegrationInterface
 
     public function __construct(
         protected AbstractGotoConfiguration $configuration,
-        protected RequestStack              $requestStack,
-        protected TranslatorInterface       $translator,
-        protected LoggerInterface           $logger,
-    )
-    {
+        protected RequestStack $requestStack,
+        protected TranslatorInterface $translator,
+        protected LoggerInterface $logger,
+    ) {
     }
 
     public function authCallback(): bool|string
@@ -59,10 +57,10 @@ abstract class AbstractGotoIntegration implements IntegrationInterface
         $session = $this->requestStack->getSession();
 
         $currentRequest = $this->requestStack->getCurrentRequest();
-        $state = $session->get($this->getName() . '_csrf_token');
+        $state          = $session->get($this->getName().'_csrf_token');
 
         if (false && $state !== $currentRequest->get('state')) { // TODO this is not working the session is not there :-(
-            $session->remove($this->getName() . '_csrf_token');
+            $session->remove($this->getName().'_csrf_token');
 
             throw new ApiErrorException('mautic.integration.auth.invalid.state');
         }
@@ -95,7 +93,7 @@ abstract class AbstractGotoIntegration implements IntegrationInterface
     {
         preg_match('/\{(?:[^{}]|(?R))*\}/', $errorMessage->getMessage(), $matches);
 
-        if ($matches !== []) {
+        if ([] !== $matches) {
             try {
                 $json = json_decode($matches[0], true, 512, JSON_THROW_ON_ERROR);
             } catch (\JsonException) {
@@ -105,11 +103,11 @@ abstract class AbstractGotoIntegration implements IntegrationInterface
 
         $errorKey = match ($json['error_description'] ?? null) {
             'error.auth.code.invalid.jwt' => 'mautic.integration.auth.invalid.jwt',
-            default => 'mautic.integration.auth.error.generic'
+            default                       => 'mautic.integration.auth.error.generic'
         };
         $errorKey = match ($json['int_err_code'] ?? null) {
             'InvalidToken' => 'mautic.integration.auth.invalid.jwt',
-            default => $errorKey
+            default        => $errorKey
         };
 
         return $this->translator->trans($errorKey, [], domain: 'flashes');

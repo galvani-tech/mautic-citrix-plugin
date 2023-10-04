@@ -8,5 +8,4 @@ use Mautic\IntegrationsBundle\Bundle\AbstractPluginBundle;
 
 class MauticCitrixBundle extends AbstractPluginBundle
 {
-
 }

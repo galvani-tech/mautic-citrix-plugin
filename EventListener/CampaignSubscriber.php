@@ -27,27 +27,26 @@ class CampaignSubscriber implements EventSubscriberInterface
 
     public function __construct(
         private CitrixServiceHelper $serviceHelper,
-        private CitrixModel         $citrixModel,
+        private CitrixModel $citrixModel,
         private TranslatorInterface $translator,
-        private LoggerInterface     $logger,
-        private Environment         $templating,
-        private EmailModel          $emailModel,
-    )
-    {
+        private LoggerInterface $logger,
+        private Environment $templating,
+        private EmailModel $emailModel,
+    ) {
     }
 
     public static function getSubscribedEvents()
     {
         return [
-            CampaignEvents::CAMPAIGN_ON_BUILD => ['onCampaignBuild', 0],
-            CitrixEvents::ON_CITRIX_WEBINAR_EVENT => ['onWebinarEvent', 0],
-            CitrixEvents::ON_CITRIX_MEETING_EVENT => ['onMeetingEvent', 0],
-            CitrixEvents::ON_CITRIX_TRAINING_EVENT => ['onTrainingEvent', 0],
-            CitrixEvents::ON_CITRIX_ASSIST_EVENT => ['onAssistEvent', 0],
-            CitrixEvents::ON_CITRIX_WEBINAR_ACTION => ['onWebinarAction', 0],
-            CitrixEvents::ON_CITRIX_MEETING_ACTION => ['onMeetingAction', 0],
+            CampaignEvents::CAMPAIGN_ON_BUILD       => ['onCampaignBuild', 0],
+            CitrixEvents::ON_CITRIX_WEBINAR_EVENT   => ['onWebinarEvent', 0],
+            CitrixEvents::ON_CITRIX_MEETING_EVENT   => ['onMeetingEvent', 0],
+            CitrixEvents::ON_CITRIX_TRAINING_EVENT  => ['onTrainingEvent', 0],
+            CitrixEvents::ON_CITRIX_ASSIST_EVENT    => ['onAssistEvent', 0],
+            CitrixEvents::ON_CITRIX_WEBINAR_ACTION  => ['onWebinarAction', 0],
+            CitrixEvents::ON_CITRIX_MEETING_ACTION  => ['onMeetingAction', 0],
             CitrixEvents::ON_CITRIX_TRAINING_ACTION => ['onTrainingAction', 0],
-            CitrixEvents::ON_CITRIX_ASSIST_ACTION => ['onAssistAction', 0],
+            CitrixEvents::ON_CITRIX_ASSIST_ACTION   => ['onAssistAction', 0],
         ];
     }
 
@@ -83,14 +82,14 @@ class CampaignSubscriber implements EventSubscriberInterface
         }
 
         // get firstName, lastName and email from keys for sender email
-        $config = $event->getConfig();
-        $criteria = $config['event-criteria-' . $product];
+        $config   = $event->getConfig();
+        $criteria = $config['event-criteria-'.$product];
         /** @var array $list */
-        $list = $config[$product . '-list'];
-        $actionId = 'citrix.action.' . $product;
+        $list     = $config[$product.'-list'];
+        $actionId = 'citrix.action.'.$product;
         try {
             $productlist = $this->serviceHelper->getCitrixChoices($product);
-            $products = [];
+            $products    = [];
 
             foreach ($list as $productId) {
                 if (array_key_exists(
@@ -98,7 +97,7 @@ class CampaignSubscriber implements EventSubscriberInterface
                     $productlist
                 )) {
                     $products[] = [
-                        'productId' => $productId,
+                        'productId'    => $productId,
                         'productTitle' => $productlist[$productId],
                     ];
                 }
@@ -110,7 +109,7 @@ class CampaignSubscriber implements EventSubscriberInterface
                 $this->startProduct($product, $event->getLead(), $products, $emailId, $actionId);
             }
         } catch (\Exception $ex) {
-            $this->logger->error('onCitrixAction - ' . $product . ': ' . $ex->getMessage());
+            $this->logger->error('onCitrixAction - '.$product.': '.$ex->getMessage());
         }
 
         return true;
@@ -152,11 +151,11 @@ class CampaignSubscriber implements EventSubscriberInterface
             return false;
         }
 
-        $config = $event->getConfig();
-        $criteria = $config['event-criteria-' . $product];
-        $list = $config[$product . '-list'];
-        $isAny = in_array('ANY', $list, true);
-        $email = $event->getLead()->getEmail();
+        $config   = $event->getConfig();
+        $criteria = $config['event-criteria-'.$product];
+        $list     = $config[$product.'-list'];
+        $isAny    = in_array('ANY', $list, true);
+        $email    = $event->getLead()->getEmail();
 
         if ('registeredToAtLeast' === $criteria) {
             $counter = $this->citrixModel->countEventsBy(
@@ -181,7 +180,6 @@ class CampaignSubscriber implements EventSubscriberInterface
 
     public function onCampaignBuild(CampaignBuilderEvent $event): void
     {
-
         $activeProducts = array_filter(CitrixProducts::toArray(), [$this->serviceHelper, 'isIntegrationAuthorized']);
 
         if ([] === $activeProducts) {
@@ -189,49 +187,49 @@ class CampaignSubscriber implements EventSubscriberInterface
         }
 
         $eventNames = [
-            CitrixProducts::GOTOWEBINAR => CitrixEvents::ON_CITRIX_WEBINAR_EVENT,
-            CitrixProducts::GOTOMEETING => CitrixEvents::ON_CITRIX_MEETING_EVENT,
+            CitrixProducts::GOTOWEBINAR  => CitrixEvents::ON_CITRIX_WEBINAR_EVENT,
+            CitrixProducts::GOTOMEETING  => CitrixEvents::ON_CITRIX_MEETING_EVENT,
             CitrixProducts::GOTOTRAINING => CitrixEvents::ON_CITRIX_TRAINING_EVENT,
-            CitrixProducts::GOTOASSIST => CitrixEvents::ON_CITRIX_ASSIST_EVENT,
+            CitrixProducts::GOTOASSIST   => CitrixEvents::ON_CITRIX_ASSIST_EVENT,
         ];
 
         $actionNames = [
-            CitrixProducts::GOTOWEBINAR => CitrixEvents::ON_CITRIX_WEBINAR_ACTION,
-            CitrixProducts::GOTOMEETING => CitrixEvents::ON_CITRIX_MEETING_ACTION,
+            CitrixProducts::GOTOWEBINAR  => CitrixEvents::ON_CITRIX_WEBINAR_ACTION,
+            CitrixProducts::GOTOMEETING  => CitrixEvents::ON_CITRIX_MEETING_ACTION,
             CitrixProducts::GOTOTRAINING => CitrixEvents::ON_CITRIX_TRAINING_ACTION,
-            CitrixProducts::GOTOASSIST => CitrixEvents::ON_CITRIX_ASSIST_ACTION,
+            CitrixProducts::GOTOASSIST   => CitrixEvents::ON_CITRIX_ASSIST_ACTION,
         ];
 
         foreach ($activeProducts as $product) {
             $event->addCondition(
-                'citrix.event.' . $product,
+                'citrix.event.'.$product,
                 [
-                    'label' => 'plugin.citrix.campaign.event.' . $product . '.label',
-                    'formType' => CitrixCampaignEventType::class,
+                    'label'           => 'plugin.citrix.campaign.event.'.$product.'.label',
+                    'formType'        => CitrixCampaignEventType::class,
                     'formTypeOptions' => [
                         'attr' => [
                             'data-product' => $product,
                         ],
                     ],
-                    'eventName' => $eventNames[$product],
-                    'channel' => 'citrix',
-                    'channelIdField' => $product . '-list',
+                    'eventName'      => $eventNames[$product],
+                    'channel'        => 'citrix',
+                    'channelIdField' => $product.'-list',
                 ]
             );
 
             $event->addAction(
-                'citrix.action.' . $product,
+                'citrix.action.'.$product,
                 [
-                    'label' => 'plugin.citrix.campaign.action.' . $product . '.label',
-                    'formType' => CitrixCampaignActionType::class,
+                    'label'           => 'plugin.citrix.campaign.action.'.$product.'.label',
+                    'formType'        => CitrixCampaignActionType::class,
                     'formTypeOptions' => [
                         'attr' => [
                             'data-product' => $product,
                         ],
                     ],
-                    'eventName' => $actionNames[$product],
-                    'channel' => 'citrix',
-                    'channelIdField' => $product . '-list',
+                    'eventName'      => $actionNames[$product],
+                    'channel'        => 'citrix',
+                    'channelIdField' => $product.'-list',
                 ]
             );
         }

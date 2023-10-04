@@ -12,13 +12,12 @@ class CitrixEventUpdateEvent extends CommonEvent
     private $email;
 
     public function __construct(
-        private      $product,
-        private      $eventName,
-        private      $eventDesc,
-        private      $eventType,
+        private $product,
+        private $eventName,
+        private $eventDesc,
+        private $eventType,
         private Lead $lead
-    )
-    {
+    ) {
         $this->email = $lead->getEmail();
     }
 

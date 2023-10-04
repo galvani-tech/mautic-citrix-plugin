@@ -10,7 +10,6 @@ use Mautic\EmailBundle\Event\EmailSendEvent;
 use MauticPlugin\MauticCitrixBundle\CitrixEvents;
 use MauticPlugin\MauticCitrixBundle\Entity\CitrixEvent;
 use MauticPlugin\MauticCitrixBundle\Event\TokenGenerateEvent;
-use MauticPlugin\MauticCitrixBundle\Helper\CitrixHelper;
 use MauticPlugin\MauticCitrixBundle\Helper\CitrixProducts;
 use MauticPlugin\MauticCitrixBundle\Helper\CitrixServiceHelper;
 use MauticPlugin\MauticCitrixBundle\Model\CitrixModel;
@@ -55,7 +54,7 @@ class EmailSubscriber implements EventSubscriberInterface
         if ('webinar' == $event->getProduct()) {
             $event->setProductLink('https://www.gotomeeting.com/webinar');
             $params = $event->getParams();
-            if (isset($params['lead']) && $params['lead'] !== '') {
+            if (isset($params['lead']) && '' !== $params['lead']) {
                 $email  = $params['lead']['email'];
                 $repo   = $this->citrixModel->getRepository();
                 $result = $repo->findBy(

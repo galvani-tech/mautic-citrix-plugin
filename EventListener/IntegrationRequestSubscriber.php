@@ -10,6 +10,7 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
  * @todo this is no longer used
+ *
  * @deprecated
  */
 class IntegrationRequestSubscriber implements EventSubscriberInterface

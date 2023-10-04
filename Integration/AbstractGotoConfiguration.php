@@ -21,11 +21,10 @@ abstract class AbstractGotoConfiguration implements ConfigTokenPersistenceInterf
 {
     public function __construct(
         private IntegrationsHelper $helper,
-        private RouterInterface    $router,
-        private RequestStack       $requestStack,
-        private HttpFactory        $httpFactory,
-    )
-    {
+        private RouterInterface $router,
+        private RequestStack $requestStack,
+        private HttpFactory $httpFactory,
+    ) {
     }
 
     private ?array $userData = null;
@@ -35,22 +34,22 @@ abstract class AbstractGotoConfiguration implements ConfigTokenPersistenceInterf
         return $this->cleanUpKeys($this->getIntegrationEntity()->getApiKeys());
     }
 
-
     /**
      * This of previous configuration cleanup, most of them are no longer implemented as the API for Goto has changed
-     * if really needed, new signer can be created to pass additional data but getUserData takes care of it
+     * if really needed, new signer can be created to pass additional data but getUserData takes care of it.
      *
      * @param array<string> $keys
+     *
      * @return array<string>
      */
     private function cleanUpKeys(array $keys): array
     {
-        if (count(array_intersect_key($keys, array_flip(['expires', 'organizer_key']))) !== 2) {
+        if (2 !== count(array_intersect_key($keys, array_flip(['expires', 'organizer_key'])))) {
             return $keys;
         }
 
         $preserveKeys = ['client_id', 'client_secret', 'access_token', 'refresh_token', 'expires_at'];
-        $preserve = array_intersect_key($keys, array_flip($preserveKeys));
+        $preserve     = array_intersect_key($keys, array_flip($preserveKeys));
 
         return $preserve;
     }
@@ -58,7 +57,7 @@ abstract class AbstractGotoConfiguration implements ConfigTokenPersistenceInterf
     public function getHttpClient(?CredentialsInterface $credentials = null)
     {
         if (!$this->isConfigured()) {
-            throw new PluginNotConfiguredException($this->getIntegrationName(true) . ' integration is not configured.');
+            throw new PluginNotConfiguredException($this->getIntegrationName(true).' integration is not configured.');
         }
 
         return $this->httpFactory->getClient($credentials ?? $this->getCredentials(), $this);
@@ -67,9 +66,9 @@ abstract class AbstractGotoConfiguration implements ConfigTokenPersistenceInterf
     public function isAuthorized(): bool
     {
         $requiredKeys = ['client_id', 'client_secret', 'access_token', 'refresh_token', 'expires_at'];
-        $apiKeys = $this->getApiKeys();
+        $apiKeys      = $this->getApiKeys();
 
-        $filteredKeys = array_filter($apiKeys, fn($key) => in_array($key, $requiredKeys) && isset($apiKeys[$key]), ARRAY_FILTER_USE_KEY);
+        $filteredKeys = array_filter($apiKeys, fn ($key) => in_array($key, $requiredKeys) && isset($apiKeys[$key]), ARRAY_FILTER_USE_KEY);
 
         return count($filteredKeys) === count($requiredKeys);
     }
@@ -82,6 +81,7 @@ abstract class AbstractGotoConfiguration implements ConfigTokenPersistenceInterf
     public function isConfigured(): bool
     {
         $keys = $this->getApiKeys();
+
         return isset($keys['client_id']) && isset($keys['client_secret']);
     }
 
@@ -95,16 +95,16 @@ abstract class AbstractGotoConfiguration implements ConfigTokenPersistenceInterf
         $apiKeys = $this->getApiKeys();
 
         $credentialsConfig = [
-            'client_id' => $apiKeys['client_id'] ?? null,
+            'client_id'     => $apiKeys['client_id'] ?? null,
             'client_secret' => $apiKeys['client_secret'] ?? null,
-            'access_token' => $apiKeys['access_token'] ?? null,
+            'access_token'  => $apiKeys['access_token'] ?? null,
             'refresh_token' => $apiKeys['refresh_token'] ?? null,
-            'expires_at' => $apiKeys['expires_at'] ?? null,
-            'token_url' => $this->getTokenUrl(),
-            'base_uri' => $this->getApiUrl(),
-            'code' => $apiKeys['code'] ?? null,
-            'state' => $apiKeys['state'] ?? null,
-            'redirect_uri' => $this->router->generate('mautic_integration_auth_callback',
+            'expires_at'    => $apiKeys['expires_at'] ?? null,
+            'token_url'     => $this->getTokenUrl(),
+            'base_uri'      => $this->getApiUrl(),
+            'code'          => $apiKeys['code'] ?? null,
+            'state'         => $apiKeys['state'] ?? null,
+            'redirect_uri'  => $this->router->generate('mautic_integration_auth_callback',
                 ['integration' => $this->getIntegrationName()],
                 UrlGeneratorInterface::ABSOLUTE_URL
             ),
@@ -124,16 +124,16 @@ abstract class AbstractGotoConfiguration implements ConfigTokenPersistenceInterf
 
         $state = $this->getAuthLoginState();
 
-        return $this->getAuthenticationUrl() . '/oauth/authorize'
-            . '?client_id=' . $apiKeys['client_id']
-            . '&response_type=code'
-            . '&redirect_uri=' . urlencode($this->getCallbackUrl())
-            . '&state=' . $state;
+        return $this->getAuthenticationUrl().'/oauth/authorize'
+            .'?client_id='.$apiKeys['client_id']
+            .'&response_type=code'
+            .'&redirect_uri='.urlencode($this->getCallbackUrl())
+            .'&state='.$state;
     }
 
     public function getTokenUrl(): string
     {
-        return $this->getAuthenticationUrl() . '/oauth/token';
+        return $this->getAuthenticationUrl().'/oauth/token';
     }
 
     public function getCallbackUrl(): string
@@ -148,10 +148,10 @@ abstract class AbstractGotoConfiguration implements ConfigTokenPersistenceInterf
     // Authentication related functions
     public function getAuthLoginState(): string
     {
-        $state = hash('sha1', uniqid((string)random_int(0, mt_getrandmax())));
+        $state   = hash('sha1', uniqid((string) random_int(0, mt_getrandmax())));
         $session = $this->requestStack->getSession();
 
-        $session->set($this->getIntegrationName() . '_csrf_token', $state); // TODO not working
+        $session->set($this->getIntegrationName().'_csrf_token', $state); // TODO not working
         $session->save();
 
         return $state;
@@ -161,11 +161,11 @@ abstract class AbstractGotoConfiguration implements ConfigTokenPersistenceInterf
     {
         return new ClosureTokenPersistence(
             function (array $keys) {    // Save tokens
-                $standingKeys = $this->getApiKeys();
-                $standingKeys['access_token'] = $keys['access_token'] ?? null;
+                $standingKeys                  = $this->getApiKeys();
+                $standingKeys['access_token']  = $keys['access_token'] ?? null;
                 $standingKeys['refresh_token'] = $keys['refresh_token'] ?? null;
-                $standingKeys['expires_at'] = $keys['expires_at'] ?? null;
-                $configuration = $this->getIntegrationEntity();
+                $standingKeys['expires_at']    = $keys['expires_at'] ?? null;
+                $configuration                 = $this->getIntegrationEntity();
                 $configuration->setApiKeys($standingKeys);
                 $this->helper->saveIntegrationConfiguration($configuration);
             },
@@ -173,9 +173,9 @@ abstract class AbstractGotoConfiguration implements ConfigTokenPersistenceInterf
                 $keys = $this->getApiKeys();
                 if ($keys['access_token'] ?? null !== null) {
                     return [
-                        'access_token' => $keys['access_token'] ?? null,
+                        'access_token'  => $keys['access_token'] ?? null,
                         'refresh_token' => $keys['refresh_token'] ?? null,
-                        'expires_at' => $keys['expires_at'] ?? null,
+                        'expires_at'    => $keys['expires_at'] ?? null,
                     ];
                 }
 
@@ -201,9 +201,10 @@ abstract class AbstractGotoConfiguration implements ConfigTokenPersistenceInterf
     // User data function
 
     /**
-     * TODO store this somewhere
+     * TODO store this somewhere.
      *
      * @return array<string,string|array<string,string>>
+     *
      * @throws PluginNotConfiguredException
      * @throws \GuzzleHttp\Exception\GuzzleException
      */
@@ -213,8 +214,8 @@ abstract class AbstractGotoConfiguration implements ConfigTokenPersistenceInterf
             return [];
         }
 
-        if ($this->userData === null || $forceReload) {
-            $response = $this->getHttpClient()->get('/identity/v1/Users/me');
+        if (null === $this->userData || $forceReload) {
+            $response       = $this->getHttpClient()->get('/identity/v1/Users/me');
             $this->userData = json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
         }
 
@@ -222,5 +223,4 @@ abstract class AbstractGotoConfiguration implements ConfigTokenPersistenceInterf
     }
 
     abstract protected function getIntegrationName(bool $displayName = false): string;
-
 }

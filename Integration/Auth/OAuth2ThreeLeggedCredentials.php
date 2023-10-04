@@ -9,14 +9,7 @@ use Mautic\IntegrationsBundle\Auth\Provider\Oauth2ThreeLegged\Credentials\Redire
 use Mautic\IntegrationsBundle\Auth\Provider\Oauth2ThreeLegged\Credentials\RefreshTokenInterface;
 use Mautic\IntegrationsBundle\Auth\Provider\Oauth2TwoLegged\Credentials\StateInterface;
 
-class OAuth2ThreeLeggedCredentials
-    implements
-    AccessTokenInterface,
-    CodeInterface,
-    StateInterface,
-    CredentialsInterface,
-    RefreshTokenInterface,
-    RedirectUriInterface
+class OAuth2ThreeLeggedCredentials implements AccessTokenInterface, CodeInterface, StateInterface, CredentialsInterface, RefreshTokenInterface, RedirectUriInterface
 {
     public function __construct(
         private ?string $client_id = null,
@@ -28,9 +21,8 @@ class OAuth2ThreeLeggedCredentials
         private ?string $code = null,
         private ?string $state = null,
         private ?string $redirect_uri = null,
-        private ?int    $expires_at = null
-    )
-    {
+        private ?int $expires_at = null
+    ) {
     }
 
     // Getters
@@ -100,7 +92,7 @@ class OAuth2ThreeLeggedCredentials
 
     private function constructAuthorizationUrl(): string
     {
-        return $this->base_uri ? $this->base_uri . '/oauth2/authorize' : '';
+        return $this->base_uri ? $this->base_uri.'/oauth2/authorize' : '';
     }
 
     // Setters

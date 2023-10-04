@@ -25,12 +25,11 @@ use Symfony\Component\Console\Output\OutputInterface;
 class SyncCommand extends ModeratedCommand
 {
     public function __construct(
-        PathsHelper                 $pathsHelper,
-        CoreParametersHelper        $coreParametersHelper,
+        PathsHelper $pathsHelper,
+        CoreParametersHelper $coreParametersHelper,
         private CitrixServiceHelper $serviceHelper,
-        private CitrixModel         $model,
-    )
-    {
+        private CitrixModel $model,
+    ) {
         parent::__construct($pathsHelper, $coreParametersHelper);
     }
 
@@ -63,7 +62,7 @@ class SyncCommand extends ModeratedCommand
         $options = $input->getOptions();
         $product = $options['product'];
 
-        if (!$this->checkRunStatus($input, $output, $options['product'] . $options['id'])) {
+        if (!$this->checkRunStatus($input, $output, $options['product'].$options['id'])) {
             return 0;
         }
 
@@ -83,7 +82,7 @@ class SyncCommand extends ModeratedCommand
             }
         } else {
             if (!CitrixProducts::isValidValue($product)) {
-                $output->writeln('<error>Invalid product: ' . $product . '. Aborted</error>');
+                $output->writeln('<error>Invalid product: '.$product.'. Aborted</error>');
                 $this->completeRun();
 
                 return;
@@ -93,17 +92,17 @@ class SyncCommand extends ModeratedCommand
 
         $count = 0;
         foreach ($activeProducts as $product) {
-            $output->writeln('<info>Synchronizing registrants for <comment>GoTo' . ucfirst($product) . '</comment></info>');
+            $output->writeln('<info>Synchronizing registrants for <comment>GoTo'.ucfirst($product).'</comment></info>');
 
             /** @var array $citrixChoices */
             $citrixChoices = [];
-            $productIds = [];
+            $productIds    = [];
             if (null === $options['id']) {
                 // all products
                 $citrixChoices = $this->serviceHelper->getCitrixChoices($product, false);
-                $productIds = array_keys($citrixChoices);
+                $productIds    = array_keys($citrixChoices);
             } else {
-                $productIds[] = $options['id'];
+                $productIds[]                  = $options['id'];
                 $citrixChoices[$options['id']] = $options['id'];
             }
 
@@ -111,26 +110,28 @@ class SyncCommand extends ModeratedCommand
                 try {
                     $eventDesc = $citrixChoices[$productId];
                     $eventName = CitrixHelper::getCleanString(
-                            $eventDesc
-                        ) . '_#' . $productId;
-                    $output->writeln('Synchronizing: [' . $productId . '] ' . $eventName);
+                        $eventDesc
+                    ).'_#'.$productId;
+                    $output->writeln('Synchronizing: ['.$productId.'] '.$eventName);
 
                     $this->model->syncEvent($product, $productId, $eventName, $eventDesc, $count, $output);
                 } catch (\Exception $ex) {
-                    $output->writeln('<error>Error syncing ' . $product . ': ' . $productId . '.</error>');
-                    $output->writeln('<error>' . $ex->getMessage() . '</error>');
+                    $output->writeln('<error>Error syncing '.$product.': '.$productId.'.</error>');
+                    $output->writeln('<error>'.$ex->getMessage().'</error>');
                     if ('dev' === MAUTIC_ENV) {
-                        $output->writeln('<info>' . $ex . '</info>');
+                        $output->writeln('<info>'.$ex.'</info>');
                     }
+
                     return Command::FAILURE;
                 }
             }
         }
 
-        $output->writeln($count . ' contacts synchronized.');
+        $output->writeln($count.' contacts synchronized.');
         $output->writeln('<info>Done.</info>');
 
         $this->completeRun();
+
         return Command::SUCCESS;
     }
 }

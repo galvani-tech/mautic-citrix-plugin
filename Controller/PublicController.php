@@ -51,7 +51,7 @@ class PublicController extends CommonController
             curl_setopt($ch, CURLOPT_HEADER, true);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_USERAGENT, $request->server->get('HTTP_USER_AGENT', ''));
-            [$header, $contents] = preg_split('/([\r\n][\r\n])\\1/', curl_exec($ch), 2);
+            [$header, $contents]     = preg_split('/([\r\n][\r\n])\\1/', curl_exec($ch), 2);
             $status                  = curl_getinfo($ch);
             curl_close($ch);
         }
@@ -90,7 +90,6 @@ class PublicController extends CommonController
     public function sessionChangedAction(Request $request)
     {
         throw new \Exception('Gototraining is not implemented');
-
         /** @var IntegrationHelper $integrationHelper */
         $integrationHelper = $this->get('mautic.helper.integration');
         $myIntegration     = $integrationHelper->getIntegrationObject('Gototraining');

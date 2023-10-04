@@ -7,10 +7,11 @@ namespace MauticPlugin\MauticCitrixBundle\Integration;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Contracts\Translation\TranslatorInterface;
+
 class GotomeetingIntegration extends AbstractGotoIntegration
 {
-    public const NAME = 'Gotomeeting';  //  this is purposely set to previous citrix name to avoid breaking changes
-    public const DISPLAY_NAME = 'Goto Meeting';
+    public const NAME              = 'Gotomeeting';  //  this is purposely set to previous citrix name to avoid breaking changes
+    public const DISPLAY_NAME      = 'Goto Meeting';
     public const GOTO_PRODUCT_NAME = 'meeting';
 
     public function getName(): string
@@ -30,11 +31,10 @@ class GotomeetingIntegration extends AbstractGotoIntegration
 
     public function __construct(
         GotoMeetingConfiguration $configuration,
-        RequestStack              $requestStack,
-        TranslatorInterface       $translator,
-        LoggerInterface           $logger,
-    )
-    {
+        RequestStack $requestStack,
+        TranslatorInterface $translator,
+        LoggerInterface $logger,
+    ) {
         parent::__construct($configuration, $requestStack, $translator, $logger);
     }
 }

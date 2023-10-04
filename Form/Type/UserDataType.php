@@ -1,8 +1,9 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace MauticPlugin\MauticCitrixBundle\Form\Type;
 
-use Mautic\FormBundle\Form\Type\FormFieldHTMLType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormInterface;
@@ -24,9 +25,9 @@ class UserDataType extends AbstractType
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
-            'disabled' => true,
-            'required' => false,
-            'mapped' => false,
+            'disabled'    => true,
+            'required'    => false,
+            'mapped'      => false,
             'integration' => null,
         ]);
     }

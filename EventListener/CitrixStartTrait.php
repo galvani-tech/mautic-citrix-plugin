@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace MauticPlugin\MauticCitrixBundle\EventListener;
 
-use Mautic\EmailBundle\Model\EmailModel;
 use Mautic\LeadBundle\Entity\Lead;
 use MauticPlugin\MauticCitrixBundle\Entity\CitrixEventTypes;
 use MauticPlugin\MauticCitrixBundle\Helper\CitrixHelper;
@@ -14,7 +13,7 @@ trait CitrixStartTrait
 {
     public function startProduct(string $product, Lead $lead, array $productsToStart, mixed $emailId = null, ?string $actionId = null)
     {
-        $leadFields = $lead->getProfileFields();
+        $leadFields                     = $lead->getProfileFields();
         [$email, $firstname, $lastname] = [
             $leadFields['email'] ?? '',
             $leadFields['firstname'] ?? '',
@@ -25,7 +24,7 @@ trait CitrixStartTrait
             foreach ($productsToStart as $productToStart) {
                 $productId = $productToStart['productId'];
 
-                //$hostUrl = CitrixHelper::startToProduct(
+                // $hostUrl = CitrixHelper::startToProduct(
                 $hostUrl = $this->serviceHelper->startToProduct(
                     $product,
                     $productId,
@@ -45,7 +44,7 @@ trait CitrixStartTrait
                         // replace tokens
                         if ($this->serviceHelper->isIntegrationAuthorized($product)) {
                             $params = [
-                                'product' => $product,
+                                'product'     => $product,
                                 'productLink' => $hostUrl,
                                 'productText' => sprintf($this->translator->trans('plugin.citrix.start.producttext'), ucfirst($product)),
                             ];
@@ -54,16 +53,16 @@ trait CitrixStartTrait
                                 '@MauticCitrix/SubscribedEvents/EmailToken/token.html.twig',
                                 $params
                             );
-                            $content = str_replace('{' . $product . '_button}', $button, $content);
+                            $content = str_replace('{'.$product.'_button}', $button, $content);
                         } else {
                             // remove the token
-                            $content = str_replace('{' . $product . '_button}', '', $content);
+                            $content = str_replace('{'.$product.'_button}', '', $content);
                         }
 
                         // set up email data
                         $emailEntity->setCustomHtml($content);
                         $leadFields['id'] = $lead->getId();
-                        $options = ['source' => ['trigger', $actionId]];
+                        $options          = ['source' => ['trigger', $actionId]];
                         $this->emailModel->sendEmail($emailEntity, $leadFields, $options);
                     } else {
                         throw new BadRequestHttpException('Unable to load email template!');
@@ -71,8 +70,8 @@ trait CitrixStartTrait
 
                     // add event to DB
                     $eventName = CitrixHelper::getCleanString(
-                            $productToStart['productTitle']
-                        ) . '_#' . $productToStart['productId'];
+                        $productToStart['productTitle']
+                    ).'_#'.$productToStart['productId'];
 
                     $this->citrixModel->addEvent(
                         $product,
